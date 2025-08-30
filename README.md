@@ -3,4 +3,4 @@
 > Status : under construction 🚧
 
 
-<img src="docs/upload-image-infra.png" alt="image-uploader-infrastructure">
+<img src="docs/upload-image-infra.svg" alt="image-uploader-infrastructure">
