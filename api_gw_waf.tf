@@ -46,23 +46,23 @@ resource "aws_wafv2_web_acl" "api_gw_waf" {
     }
 
     statement {
-        not_statement {
-            statement {
-            size_constraint_statement {
-                field_to_match {
-                single_header {
-                    name = "x-custom-auth" # must be lowercase
-                }
-                }
-                comparison_operator = "GT"   # greater than
-                size                = 0      # header length must be > 0
-                text_transformation {
-                priority = 0
-                type     = "NONE"
-                }
+      not_statement {
+        statement {
+          size_constraint_statement {
+            field_to_match {
+              single_header {
+                name = "x-custom-auth" # must be lowercase
+              }
             }
+            comparison_operator = "GT" # greater than
+            size                = 0    # header length must be > 0
+            text_transformation {
+              priority = 0
+              type     = "NONE"
             }
+          }
         }
+      }
     }
 
     visibility_config {

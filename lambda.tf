@@ -31,7 +31,8 @@ resource "aws_lambda_function" "get_presigned_url" {
 
   environment {
     variables = {
-      UPLOAD_BUCKET = var.bucket_name
+      UPLOAD_BUCKET      = var.bucket_name
+      CUSTOM_AUTH_SECRET = local.auth_secret
     }
   }
 
@@ -42,4 +43,23 @@ resource "aws_lambda_function" "get_presigned_url" {
 resource "aws_iam_role_policy_attachment" "lambda_logging" {
   role       = aws_iam_role.lambda_exec.name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+}
+
+
+resource "aws_iam_policy" "lambda_secrets_access" {
+  name        = "${var.environment}-lambda-secretsmanager-access"
+  description = "Allow Lambda to access Secrets Manager"
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = [
+          "secretsmanager:GetSecretValue"
+        ]
+        Effect   = "Allow"
+        Resource = data.aws_secretsmanager_secret.image_upload_secrets.arn
+      }
+    ]
+  })
 }

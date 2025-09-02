@@ -62,11 +62,6 @@ resource "aws_api_gateway_method" "get_method" {
   resource_id   = aws_api_gateway_resource.image_upload_url_resource.id
   http_method   = "GET"
   authorization = "NONE" # allows public access
-
-  # Require custom header
-  request_parameters = {
-    "method.request.header.X-Custom-Auth" = true
-  }
 }
 
 resource "aws_api_gateway_integration" "lambda_integration" {
