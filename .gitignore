@@ -30,3 +30,4 @@ override.tf.json
 dist
 *.zip
 lambda/node_modules
+test_scripts

@@ -19,6 +19,24 @@ resource "aws_iam_role" "lambda_exec" {
   })
 }
 
+resource "aws_iam_role_policy" "lambda_s3_upload" {
+  name = "${var.environment}-lambda-s3-upload"
+  role = aws_iam_role.lambda_exec.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "s3:PutObject"
+        ]
+        Resource = "${aws_s3_bucket.s3_bucket.arn}/*"
+      }
+    ]
+  })
+}
+
 resource "aws_lambda_function" "get_presigned_url" {
   function_name = "${var.environment}-get-presigned-url-lambda"
   runtime       = "python3.11"
@@ -31,7 +49,8 @@ resource "aws_lambda_function" "get_presigned_url" {
 
   environment {
     variables = {
-      UPLOAD_BUCKET      = var.bucket_name
+      REGION             = var.region
+      UPLOAD_BUCKET      = aws_s3_bucket.s3_bucket.bucket
       CUSTOM_AUTH_SECRET = local.auth_secret
     }
   }

@@ -3,7 +3,9 @@ import boto3
 import os
 import uuid
 
-s3_client = boto3.client("s3")
+s3_client = boto3.client("s3", 
+                         region_name=os.environ.get("REGION", "eu-central-1"),
+                         endpoint_url=f"https://s3.{os.environ.get('REGION','eu-central-1')}.amazonaws.com")
 
 # Read bucket name from environment variable
 BUCKET_NAME = os.environ.get("UPLOAD_BUCKET", "s3-bucket-name")
@@ -34,15 +36,11 @@ def lambda_handler(event, context):
         # Generate a random unique filename (you can also prefix with user ID or folder)
         file_key = str(uuid.uuid4())
 
-        # Default to generic binary content type
-        file_type = "image/*"
-
         presigned_url = s3_client.generate_presigned_url(
             "put_object",
             Params={
                 "Bucket": BUCKET_NAME,
-                "Key": file_key,
-                "ContentType": file_type
+                "Key": file_key
             },
             ExpiresIn=3600  # URL valid for 1 hour
         )
