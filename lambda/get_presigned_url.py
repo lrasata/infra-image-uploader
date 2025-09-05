@@ -17,7 +17,7 @@ corsHeaders = {
     "Access-Control-Allow-Methods": "GET,OPTIONS,PUT",
 }
 
-def lambda_handler(event, context):
+def get_presigned_url_handler(event, context):
     """
     Lambda handler that generates a presigned S3 URL for upload.
     """
@@ -35,6 +35,8 @@ def lambda_handler(event, context):
     try:
         # Generate a random unique filename (you can also prefix with user ID or folder)
         file_key = str(uuid.uuid4())
+        max_size = int(os.environ.get("EPHEPHEMERAL_STORAGE_SIZE", 524288000))
+
 
         presigned_url = s3_client.generate_presigned_url(
             "put_object",
@@ -42,7 +44,7 @@ def lambda_handler(event, context):
                 "Bucket": BUCKET_NAME,
                 "Key": file_key
             },
-            ExpiresIn=3600  # URL valid for 1 hour
+            ExpiresIn=int(os.environ.get("EXPIRATION_TIME_S", 300))  # URL expiration time in seconds
         )
 
         return {

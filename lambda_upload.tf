@@ -4,8 +4,8 @@ data "archive_file" "lambda_zip" {
   output_path = "${path.module}/lambda.zip"
 }
 
-resource "aws_iam_role" "lambda_exec" {
-  name = "${var.environment}-lambda-exec-role"
+resource "aws_iam_role" "lambda_upload_exec_role" {
+  name = "${var.environment}-lambda-upload-exec-role"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -19,9 +19,10 @@ resource "aws_iam_role" "lambda_exec" {
   })
 }
 
+
 resource "aws_iam_role_policy" "lambda_s3_upload" {
-  name = "${var.environment}-lambda-s3-upload"
-  role = aws_iam_role.lambda_exec.id
+  name = "${var.environment}-lambda-s3-upload-role-policy"
+  role = aws_iam_role.lambda_upload_exec_role.id
 
   policy = jsonencode({
     Version = "2012-10-17"
@@ -31,7 +32,7 @@ resource "aws_iam_role_policy" "lambda_s3_upload" {
         Action = [
           "s3:PutObject"
         ]
-        Resource = "${aws_s3_bucket.s3_bucket.arn}/*"
+        Resource = "${aws_s3_bucket.s3_bucket_uploads.arn}/*"
       }
     ]
   })
@@ -40,27 +41,49 @@ resource "aws_iam_role_policy" "lambda_s3_upload" {
 resource "aws_lambda_function" "get_presigned_url" {
   function_name = "${var.environment}-get-presigned-url-lambda"
   runtime       = "python3.11"
-  handler       = "get_presigned_url.lambda_handler" # file.function exported
+  handler       = "get_presigned_url.get_presigned_url_handler"
 
   filename         = data.archive_file.lambda_zip.output_path
   source_code_hash = data.archive_file.lambda_zip.output_base64sha256
 
-  role = aws_iam_role.lambda_exec.arn
+  role = aws_iam_role.lambda_upload_exec_role.arn
 
   environment {
     variables = {
       REGION             = var.region
-      UPLOAD_BUCKET      = aws_s3_bucket.s3_bucket.bucket
+      EXPIRATION_TIME_S  = var.lambda_upload_presigned_url_expiration_time_s
+      UPLOAD_BUCKET      = aws_s3_bucket.s3_bucket_uploads.bucket
       CUSTOM_AUTH_SECRET = local.auth_secret
     }
   }
 
-  depends_on = [data.archive_file.lambda_zip, aws_iam_role.lambda_exec]
+  depends_on = [data.archive_file.lambda_zip, aws_iam_role.lambda_upload_exec_role]
 }
 
+# IAM Policy for S3 access
+resource "aws_iam_policy" "s3_uploads_access_policy" {
+  name        = "lambda_uploads_s3_access_policy"
+  description = "Allow Lambda to access S3 bucket for pre-signed URL"
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action   = ["s3:GetObject", "s3:PutObject"]
+        Effect   = "Allow"
+        Resource = "${aws_s3_bucket.s3_bucket_uploads.arn}/*"
+      }
+    ]
+  })
+}
 
-resource "aws_iam_role_policy_attachment" "lambda_logging" {
-  role       = aws_iam_role.lambda_exec.name
+# Attach policy to role
+resource "aws_iam_role_policy_attachment" "lambda_uploads_policy_attach" {
+  role       = aws_iam_role.lambda_upload_exec_role.name
+  policy_arn = aws_iam_policy.s3_uploads_access_policy.arn
+}
+
+resource "aws_iam_role_policy_attachment" "lambda_upload_logging" {
+  role       = aws_iam_role.lambda_upload_exec_role.name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
 }
 
