@@ -35,8 +35,6 @@ def get_presigned_url_handler(event, context):
     try:
         # Generate a random unique filename (you can also prefix with user ID or folder)
         file_key = str(uuid.uuid4())
-        max_size = int(os.environ.get("EPHEPHEMERAL_STORAGE_SIZE", 524288000))
-
 
         presigned_url = s3_client.generate_presigned_url(
             "put_object",

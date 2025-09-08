@@ -45,3 +45,9 @@ variable "clamAV_layer_arn" {
   default     = "arn:aws:lambda:eu-central-1:387836084035:layer:ClamAVLayer:1"
 
 }
+
+variable "ec2_instance_type" {
+  description = "value for EC2 instance type"
+  type        = string
+  default     = "t3.medium"
+}
