@@ -10,12 +10,6 @@ variable "uploads_bucket_name" {
   default     = "uploads-bucket"
 }
 
-variable "quarantine_bucket_name" {
-  description = "The name of the S3 bucket for quarantined files"
-  type        = string
-  default     = "quarantine-bucket"
-}
-
 variable "environment" {
   description = "The environment for the deployment (e.g., dev, staging, prod)"
   type        = string
@@ -23,7 +17,7 @@ variable "environment" {
 }
 
 variable "backend_certificate_arn" {
-  description = "The ARN of the ACM certificate for the ALB HTTPS listener and API Gateway"
+  description = "The ARN of the ACM certificate"
   type        = string
 }
 
@@ -39,15 +33,8 @@ variable "lambda_upload_presigned_url_expiration_time_s" {
   default     = 300
 }
 
-variable "clamAV_layer_arn" {
-  description = "The ARN of the ClamAV Lambda Layer"
+variable "terraform_user_arn" {
+  description = "The name of the IAM user for Terraform to assume roles"
   type        = string
-  default     = "arn:aws:lambda:eu-central-1:387836084035:layer:ClamAVLayer:1"
-
-}
-
-variable "ec2_instance_type" {
-  description = "value for EC2 instance type"
-  type        = string
-  default     = "t3.medium"
+  default     = "arn:aws:iam::<aws_account_id>:user/terraform-user"
 }

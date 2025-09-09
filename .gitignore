@@ -29,5 +29,5 @@ override.tf.json
 .env
 dist
 *.zip
-lambda/node_modules
+lambda_node/node_modules
 test_scripts

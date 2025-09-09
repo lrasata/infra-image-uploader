@@ -11,10 +11,10 @@ resource "aws_s3_bucket_public_access_block" "s3_bucket_public_access" {
   restrict_public_buckets = true
 }
 
-resource "aws_lambda_permission" "allow_s3_to_invoke_copy_to_ec2" {
+resource "aws_lambda_permission" "allow_s3_to_invoke_generate_thumbnail" {
   statement_id  = "AllowExecutionFromS3"
   action        = "lambda:InvokeFunction"
-  function_name = aws_lambda_function.copy_to_ec2.function_name
+  function_name = aws_lambda_function.generate_thumbnail.function_name
   principal     = "s3.amazonaws.com"
   source_arn    = aws_s3_bucket.s3_bucket_uploads.arn
 }
@@ -23,9 +23,9 @@ resource "aws_s3_bucket_notification" "source_notification" {
   bucket = aws_s3_bucket.s3_bucket_uploads.id
 
   lambda_function {
-    lambda_function_arn = aws_lambda_function.copy_to_ec2.arn
+    lambda_function_arn = aws_lambda_function.generate_thumbnail.arn
     events              = ["s3:ObjectCreated:*"]
   }
 
-  depends_on = [aws_lambda_function.copy_to_ec2, aws_lambda_permission.allow_s3_to_invoke_copy_to_ec2]
+  depends_on = [aws_lambda_function.generate_thumbnail, aws_lambda_permission.allow_s3_to_invoke_generate_thumbnail]
 }

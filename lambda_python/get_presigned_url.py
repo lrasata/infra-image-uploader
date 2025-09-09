@@ -2,6 +2,7 @@ import json
 import boto3
 import os
 import uuid
+import base64
 
 s3_client = boto3.client("s3", 
                          region_name=os.environ.get("REGION", "eu-central-1"),
@@ -17,13 +18,17 @@ corsHeaders = {
     "Access-Control-Allow-Methods": "GET,OPTIONS,PUT",
 }
 
-def get_presigned_url_handler(event, context):
+def handler(event, context):
     """
     Lambda handler that generates a presigned S3 URL for upload.
     """
 
     headers = event.get("headers", {})
     custom_header = headers.get("x-custom-auth")
+
+    # filename and ext from original request are transformed to queryStringParameters by API Gateway
+    original_filename = event.get("queryStringParameters", {}).get("filename")
+    extension = event.get("queryStringParameters", {}).get("ext")
 
     if custom_header != os.environ.get("CUSTOM_AUTH_SECRET"):
         return {
@@ -33,8 +38,9 @@ def get_presigned_url_handler(event, context):
         }
     
     try:
-        # Generate a random unique filename (you can also prefix with user ID or folder)
-        file_key = str(uuid.uuid4())
+        # Generate a random unique filename
+        random_id = base64.urlsafe_b64encode(uuid.uuid4().bytes).rstrip(b"=").decode("utf-8")
+        file_key = f"{str(random_id)}_{original_filename}.{extension}"
 
         presigned_url = s3_client.generate_presigned_url(
             "put_object",
