@@ -1,3 +1,8 @@
+locals {
+  UPLOAD_FOLDER    = "uploads/"
+  THUMBNAIL_FOLDER = "thumbnails/"
+}
+
 resource "aws_s3_bucket" "s3_bucket_uploads" {
   bucket = "${var.environment}-${var.uploads_bucket_name}"
 }
@@ -25,7 +30,11 @@ resource "aws_s3_bucket_notification" "source_notification" {
   lambda_function {
     lambda_function_arn = aws_lambda_function.generate_thumbnail.arn
     events              = ["s3:ObjectCreated:*"]
+    # Add filter so only objects under "uploads/" trigger the lambda
+    filter_prefix = local.UPLOAD_FOLDER
   }
+
+
 
   depends_on = [aws_lambda_function.generate_thumbnail, aws_lambda_permission.allow_s3_to_invoke_generate_thumbnail]
 }

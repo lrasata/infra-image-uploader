@@ -21,7 +21,7 @@ exports.handler = async (event) => {
         // Define thumbnail key
         const keyParts = key.split('/');
         const filename = keyParts[keyParts.length - 1];
-        const thumbKey = `thumbnails/${filename}`;
+        const thumbKey = `${process.env.THUMBNAIL_FOLDER}${filename}`;
 
         // Upload thumbnail back to S3
         await S3.putObject({

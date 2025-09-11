@@ -31,8 +31,14 @@ resource "aws_lambda_function" "generate_thumbnail" {
 
   role = aws_iam_role.lambda_generate_thumbnail_exec_role.arn
 
-  timeout       = 30  # seconds
-  memory_size   = 512 # more memory = faster processing - TODO in Instructions clarify max size of image to upload
+  timeout     = 30  # seconds
+  memory_size = 512 # more memory = faster processing - TODO should prorbably enfore a max size on upload with get-presigned-url POST request
+
+  environment {
+    variables = {
+      THUMBNAIL_FOLDER = local.THUMBNAIL_FOLDER
+    }
+  }
 }
 
 # IAM Policy for S3 access

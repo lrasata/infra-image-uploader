@@ -10,6 +10,7 @@ s3_client = boto3.client("s3",
 
 # Read bucket name from environment variable
 BUCKET_NAME = os.environ.get("UPLOAD_BUCKET", "s3-bucket-name")
+UPLOAD_FOLDER = os.environ.get("UPLOAD_FOLDER", "uploads/")
 
 corsHeaders = {
     "Content-Type": "application/json",
@@ -40,7 +41,7 @@ def handler(event, context):
     try:
         # Generate a random unique filename
         random_id = base64.urlsafe_b64encode(uuid.uuid4().bytes).rstrip(b"=").decode("utf-8")
-        file_key = f"{str(random_id)}_{original_filename}.{extension}"
+        file_key = f"{UPLOAD_FOLDER}{str(random_id)}_{original_filename}.{extension}"
 
         presigned_url = s3_client.generate_presigned_url(
             "put_object",

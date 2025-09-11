@@ -35,6 +35,7 @@ resource "aws_lambda_function" "get_presigned_url" {
       EXPIRATION_TIME_S  = var.lambda_upload_presigned_url_expiration_time_s
       UPLOAD_BUCKET      = aws_s3_bucket.s3_bucket_uploads.bucket
       CUSTOM_AUTH_SECRET = local.auth_secret
+      UPLOAD_FOLDER      = local.UPLOAD_FOLDER
     }
   }
 
