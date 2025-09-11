@@ -1,13 +1,13 @@
-data "archive_file" "lambda_generate_thumbnail_zip" {
+data "archive_file" "lambda_process_uploaded_file_zip" {
   type        = "zip"
-  source_dir  = "${path.module}/lambda_generate_thumbnail"
-  output_path = "${path.module}/lambda_generate_thumbnail.zip"
+  source_dir  = "${path.module}/lambda_process_uploaded_file"
+  output_path = "${path.module}/lambda_process_uploaded_file.zip"
 
   excludes = ["node_modules/.bin/*"]
 }
 
-resource "aws_iam_role" "lambda_generate_thumbnail_exec_role" {
-  name = "${var.environment}-lambda-generate-thumbnail-exec-role"
+resource "aws_iam_role" "lambda_process_uploaded_file_exec_role" {
+  name = "${var.environment}-lambda-process-uploaded-file-exec-role"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -21,15 +21,15 @@ resource "aws_iam_role" "lambda_generate_thumbnail_exec_role" {
   })
 }
 
-resource "aws_lambda_function" "generate_thumbnail" {
-  function_name = "${var.environment}-generate-thumbnail-lambda"
+resource "aws_lambda_function" "process_uplaoded_file" {
+  function_name = "${var.environment}-process-uploaded-file-lambda"
   runtime       = "nodejs20.x"
-  handler       = "generateThumbnail.handler"
+  handler       = "processUploadedFile.handler"
 
-  filename         = data.archive_file.lambda_generate_thumbnail_zip.output_path
-  source_code_hash = data.archive_file.lambda_generate_thumbnail_zip.output_base64sha256
+  filename         = data.archive_file.lambda_process_uploaded_file_zip.output_path
+  source_code_hash = data.archive_file.lambda_process_uploaded_file_zip.output_base64sha256
 
-  role = aws_iam_role.lambda_generate_thumbnail_exec_role.arn
+  role = aws_iam_role.lambda_process_uploaded_file_exec_role.arn
 
   timeout     = 30  # seconds
   memory_size = 512 # more memory = faster processing - TODO should prorbably enfore a max size on upload with get-presigned-url POST request
@@ -37,17 +37,23 @@ resource "aws_lambda_function" "generate_thumbnail" {
   environment {
     variables = {
       THUMBNAIL_FOLDER = local.THUMBNAIL_FOLDER
+      DYNAMO_TABLE     = aws_dynamodb_table.files_per_user_metadata.name
     }
   }
 }
 
 # IAM Policy for S3 access
 resource "aws_iam_policy" "gt_s3_access_policy" {
-  name        = "${var.environment}-lambda-generate-thumbnail-policy"
+  name        = "${var.environment}-lambda-process-uploaded-file-policy"
   description = "Allow Lambda to access S3 upload bucket for read and update"
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
+      {
+        Effect   = "Allow",
+        Action   = ["dynamodb:PutItem"],
+        Resource = aws_dynamodb_table.files_per_user_metadata.arn
+      },
       {
         Action = ["s3:GetObject", "s3:GetObjectVersion", "s3:ListBucket", "s3:PutObject"]
         Effect = "Allow"
@@ -61,11 +67,11 @@ resource "aws_iam_policy" "gt_s3_access_policy" {
 }
 
 resource "aws_iam_role_policy_attachment" "lambda_gt_access_policy_attach" {
-  role       = aws_iam_role.lambda_generate_thumbnail_exec_role.name
+  role       = aws_iam_role.lambda_process_uploaded_file_exec_role.name
   policy_arn = aws_iam_policy.gt_s3_access_policy.arn
 }
 
 resource "aws_iam_role_policy_attachment" "lambda_gt_logs_policy" {
-  role       = aws_iam_role.lambda_generate_thumbnail_exec_role.name
+  role       = aws_iam_role.lambda_process_uploaded_file_exec_role.name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
 }

@@ -16,10 +16,10 @@ resource "aws_s3_bucket_public_access_block" "s3_bucket_public_access" {
   restrict_public_buckets = true
 }
 
-resource "aws_lambda_permission" "allow_s3_to_invoke_generate_thumbnail" {
+resource "aws_lambda_permission" "allow_s3_to_invoke_process_uploaded_file" {
   statement_id  = "AllowExecutionFromS3"
   action        = "lambda:InvokeFunction"
-  function_name = aws_lambda_function.generate_thumbnail.function_name
+  function_name = aws_lambda_function.process_uplaoded_file.function_name
   principal     = "s3.amazonaws.com"
   source_arn    = aws_s3_bucket.s3_bucket_uploads.arn
 }
@@ -28,7 +28,7 @@ resource "aws_s3_bucket_notification" "source_notification" {
   bucket = aws_s3_bucket.s3_bucket_uploads.id
 
   lambda_function {
-    lambda_function_arn = aws_lambda_function.generate_thumbnail.arn
+    lambda_function_arn = aws_lambda_function.process_uplaoded_file.arn
     events              = ["s3:ObjectCreated:*"]
     # Add filter so only objects under "uploads/" trigger the lambda
     filter_prefix = local.UPLOAD_FOLDER
@@ -36,5 +36,5 @@ resource "aws_s3_bucket_notification" "source_notification" {
 
 
 
-  depends_on = [aws_lambda_function.generate_thumbnail, aws_lambda_permission.allow_s3_to_invoke_generate_thumbnail]
+  depends_on = [aws_lambda_function.process_uplaoded_file, aws_lambda_permission.allow_s3_to_invoke_process_uploaded_file]
 }

@@ -32,21 +32,26 @@ exports.handler = async (event) => {
     }
 
     const query = event.queryStringParameters || {};
-    const originalFilename = query.filename;
-    const extension = query.ext || "";
 
-    if (!originalFilename) {
+    // Client must send userId, filename, extension
+    const userId = query.userId;
+    const originalFilename = query.filename;
+    const extension = query.ext;
+
+    if (!userId || !originalFilename || !extension) {
         return {
             statusCode: 400,
             headers: corsHeaders,
-            body: JSON.stringify({ error: "Missing filename in query parameters" }),
+            body: JSON.stringify({ error: "Body is malformed" })
         };
     }
 
     try {
         // Generate a random unique filename
         const randomId = crypto.randomBytes(16).toString("base64url"); // URL-safe base64
-        const fileKey = `${UPLOAD_FOLDER}${randomId}_${originalFilename}${extension ? "." + extension : ""}`;
+
+        // Build key: uploads/<user_id>/<randomId>_<filename>.<extension>
+        const fileKey = `${UPLOAD_FOLDER}${userId}/${randomId}_${originalFilename}${extension ? "." + extension : ""}`;
 
         // Generate presigned PUT URL
         const presignedUrl = s3.getSignedUrl("putObject", {

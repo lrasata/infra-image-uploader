@@ -15,10 +15,18 @@
 
 **Reliability**
 
+- 
+- 
+
 **Scalability**
+
+- 
+- 
 
 **Security**
 
+- 
+- 
 
 ## 🔍 Gotchas -  Lessons learned
 
