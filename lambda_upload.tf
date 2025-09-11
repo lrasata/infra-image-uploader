@@ -1,7 +1,7 @@
-data "archive_file" "lambda_python_zip" {
+data "archive_file" "lambda_get_presigned_url_zip" {
   type        = "zip"
-  source_dir  = "${path.module}/lambda_python"
-  output_path = "${path.module}/lambda_python.zip"
+  source_dir  = "${path.module}/lambda_get_presigned_url"
+  output_path = "${path.module}/lambda_get_presigned_url.zip"
 }
 
 resource "aws_iam_role" "lambda_upload_exec_role" {
@@ -21,11 +21,11 @@ resource "aws_iam_role" "lambda_upload_exec_role" {
 
 resource "aws_lambda_function" "get_presigned_url" {
   function_name = "${var.environment}-get-presigned-url-lambda"
-  runtime       = "python3.11"
-  handler       = "get_presigned_url.handler"
+  runtime       = "nodejs20.x"
+  handler       = "getPresignedUrl.handler"
 
-  filename         = data.archive_file.lambda_python_zip.output_path
-  source_code_hash = data.archive_file.lambda_python_zip.output_base64sha256
+  filename         = data.archive_file.lambda_get_presigned_url_zip.output_path
+  source_code_hash = data.archive_file.lambda_get_presigned_url_zip.output_base64sha256
 
   role = aws_iam_role.lambda_upload_exec_role.arn
 
@@ -39,7 +39,7 @@ resource "aws_lambda_function" "get_presigned_url" {
     }
   }
 
-  depends_on = [data.archive_file.lambda_python_zip, aws_iam_role.lambda_upload_exec_role]
+  depends_on = [data.archive_file.lambda_get_presigned_url_zip, aws_iam_role.lambda_upload_exec_role]
 }
 
 # IAM Policy for S3 access

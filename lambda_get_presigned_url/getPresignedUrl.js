@@ -1,0 +1,74 @@
+const AWS = require("aws-sdk");
+const crypto = require("crypto");
+
+const REGION = process.env.REGION || "eu-central-1";
+const BUCKET_NAME = process.env.UPLOAD_BUCKET || "s3-bucket-name";
+const UPLOAD_FOLDER = process.env.UPLOAD_FOLDER || "uploads/";
+const EXPIRATION_TIME_S = parseInt(process.env.EXPIRATION_TIME_S || "300");
+const CUSTOM_AUTH_SECRET = process.env.CUSTOM_AUTH_SECRET;
+
+const s3 = new AWS.S3({
+    region: REGION,
+    signatureVersion: "v4"
+});
+
+const corsHeaders = {
+    "Content-Type": "application/json",
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Headers": "Content-Type",
+    "Access-Control-Allow-Methods": "GET,OPTIONS,PUT",
+};
+
+exports.handler = async (event) => {
+    const headers = event.headers || {};
+    const customHeader = headers["x-custom-auth"];
+
+    if (customHeader !== CUSTOM_AUTH_SECRET) {
+        return {
+            statusCode: 403,
+            headers: corsHeaders,
+            body: JSON.stringify({ error: "Forbidden: Invalid or missing custom auth header" }),
+        };
+    }
+
+    const query = event.queryStringParameters || {};
+    const originalFilename = query.filename;
+    const extension = query.ext || "";
+
+    if (!originalFilename) {
+        return {
+            statusCode: 400,
+            headers: corsHeaders,
+            body: JSON.stringify({ error: "Missing filename in query parameters" }),
+        };
+    }
+
+    try {
+        // Generate a random unique filename
+        const randomId = crypto.randomBytes(16).toString("base64url"); // URL-safe base64
+        const fileKey = `${UPLOAD_FOLDER}${randomId}_${originalFilename}${extension ? "." + extension : ""}`;
+
+        // Generate presigned PUT URL
+        const presignedUrl = s3.getSignedUrl("putObject", {
+            Bucket: BUCKET_NAME,
+            Key: fileKey,
+            Expires: EXPIRATION_TIME_S
+        });
+
+        return {
+            statusCode: 200,
+            headers: corsHeaders,
+            body: JSON.stringify({
+                upload_url: presignedUrl,
+                file_key: fileKey
+            })
+        };
+
+    } catch (error) {
+        return {
+            statusCode: 500,
+            headers: corsHeaders,
+            body: JSON.stringify({ error: error.message })
+        };
+    }
+};

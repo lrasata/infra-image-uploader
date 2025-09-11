@@ -1,7 +1,7 @@
-data "archive_file" "lambda_node_zip" {
+data "archive_file" "lambda_generate_thumbnail_zip" {
   type        = "zip"
-  source_dir  = "${path.module}/lambda_node"
-  output_path = "${path.module}/lambda_node.zip"
+  source_dir  = "${path.module}/lambda_generate_thumbnail"
+  output_path = "${path.module}/lambda_generate_thumbnail.zip"
 
   excludes = ["node_modules/.bin/*"]
 }
@@ -26,8 +26,8 @@ resource "aws_lambda_function" "generate_thumbnail" {
   runtime       = "nodejs20.x"
   handler       = "generateThumbnail.handler"
 
-  filename         = data.archive_file.lambda_node_zip.output_path
-  source_code_hash = data.archive_file.lambda_node_zip.output_base64sha256
+  filename         = data.archive_file.lambda_generate_thumbnail_zip.output_path
+  source_code_hash = data.archive_file.lambda_generate_thumbnail_zip.output_base64sha256
 
   role = aws_iam_role.lambda_generate_thumbnail_exec_role.arn
 
