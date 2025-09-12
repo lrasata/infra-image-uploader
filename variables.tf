@@ -10,6 +10,12 @@ variable "uploads_bucket_name" {
   default     = "uploads-bucket"
 }
 
+variable "enable_transfer_acceleration" {
+  type        = bool
+  description = "Enable S3 Transfer Acceleration?"
+  default     = false
+}
+
 variable "environment" {
   description = "The environment for the deployment (e.g., dev, staging, prod)"
   type        = string

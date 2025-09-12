@@ -11,7 +11,7 @@ exports.handler = async (event) => {
         const fileKey = event.Records[0].s3.object.key;
 
         // Extract user_id from the key or metadata (adjust this based on your naming convention)
-        // Example: user123/background.png -> userId = user123
+        // Example: uploads/user123/background.png -> userId = user123
         const keyParts = fileKey.split('/');
         const userId = keyParts[1];
         const filename = keyParts[keyParts.length - 1];

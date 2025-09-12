@@ -32,6 +32,6 @@
 
 ## Features to implement
 
-- [ ] Integrate antivirus - prevent malware to end up in s3 bukcet on upload.
-- [ ] Enable S3 transfer acceleration feature for uploads ?
+- [ ] Integrate antivirus - prevent malware to end up in s3 bucket on upload.
+- [x] Enable S3 transfer acceleration feature for uploads ?
 - [ ] Make this settings as a module to be easily integrated in other terraform projects.

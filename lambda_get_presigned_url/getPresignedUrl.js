@@ -9,7 +9,8 @@ const CUSTOM_AUTH_SECRET = process.env.CUSTOM_AUTH_SECRET;
 
 const s3 = new AWS.S3({
     region: REGION,
-    signatureVersion: "v4"
+    signatureVersion: "v4",
+    useAccelerateEndpoint: process.env.USE_S3_ACCEL === "true"
 });
 
 const corsHeaders = {
