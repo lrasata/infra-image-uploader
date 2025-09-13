@@ -1,17 +1,35 @@
 const AWS = require('aws-sdk');
 const S3 = new AWS.S3();
 const DynamoDB = new AWS.DynamoDB.DocumentClient();
-
 const sharp = require('sharp');
 
 exports.handler = async (event) => {
     try {
-        // Extract bucket and key from the S3 event
-        const bucket = event.Records[0].s3.bucket.name;
-        const fileKey = event.Records[0].s3.object.key;
+        console.log("Incoming event:", JSON.stringify(event, null, 2));
 
-        // Extract user_id from the key or metadata (adjust this based on your naming convention)
-        // Example: uploads/user123/background.png -> userId = user123
+        // Extract SNS message
+        const snsMessage = event.Records[0].Sns.Message;
+        const message = JSON.parse(snsMessage);
+
+        const bucket = message.bucket;
+        const fileKey = message.key;
+        const status = message.status;
+
+        // Only process files in uploads/ folder
+        const uploadFolder = (process.env.UPLOAD_FOLDER || "").trim().toLowerCase();
+        const keyLower = fileKey.toLowerCase();
+        if (!keyLower.startsWith(uploadFolder)) {
+            console.log(`Skipping file ${fileKey} with status ${status}. (not under ${uploadFolder})`);
+            return { statusCode: 200, body: "File skipped (not under uploads/)" };
+        }
+        
+        // Only process "clean" files
+        if (status !== "clean") {
+            console.log(`Skipping file ${fileKey} with status ${status}. File skipped (not clean)`);
+            return { statusCode: 200, body: "File skipped (not clean)" };
+        }
+
+        // Extract user_id from fileKey (uploads/user123/background.png)
         const keyParts = fileKey.split('/');
         const userId = keyParts[1];
         const filename = keyParts[keyParts.length - 1];
@@ -36,11 +54,11 @@ exports.handler = async (event) => {
             ContentType: originalObject.ContentType
         }).promise();
 
-        // Save record in DynamoDB
-        const tableName = process.env.DYNAMO_TABLE; 
+        // Save metadata to DynamoDB
+        const tableName = process.env.DYNAMO_TABLE;
         const item = {
-            file_key: fileKey, // Partition key
-            user_id: userId, // Sort key           
+            file_key: fileKey,   // partition key
+            user_id: userId,     // sort key
             thumbnail_key: thumbKey
         };
 
@@ -53,8 +71,9 @@ exports.handler = async (event) => {
             statusCode: 200,
             body: `Thumbnail saved to ${bucket}/${thumbKey} and metadata recorded in DynamoDB`
         };
+
     } catch (err) {
-        console.error(err);
+        console.error("Error:", err);
         return {
             statusCode: 500,
             body: JSON.stringify({ error: err.message })
