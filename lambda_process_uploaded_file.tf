@@ -21,7 +21,7 @@ resource "aws_iam_role" "lambda_process_uploaded_file_exec_role" {
   })
 }
 
-resource "aws_lambda_function" "process_uplaoded_file" {
+resource "aws_lambda_function" "process_uploaded_file" {
   function_name = "${var.environment}-process-uploaded-file-lambda"
   runtime       = "nodejs20.x"
   handler       = "processUploadedFile.handler"
@@ -36,8 +36,10 @@ resource "aws_lambda_function" "process_uplaoded_file" {
 
   environment {
     variables = {
-      THUMBNAIL_FOLDER = local.THUMBNAIL_FOLDER
-      DYNAMO_TABLE     = aws_dynamodb_table.files_per_user_metadata.name
+      BUCKET_AV_ENABLED = var.use_bucketav
+      UPLOAD_FOLDER     = local.UPLOAD_FOLDER
+      THUMBNAIL_FOLDER  = local.THUMBNAIL_FOLDER
+      DYNAMO_TABLE      = aws_dynamodb_table.files_per_user_metadata.name
     }
   }
 }

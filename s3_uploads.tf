@@ -7,14 +7,6 @@ resource "aws_s3_bucket" "s3_bucket_uploads" {
   bucket = "${var.environment}-${var.uploads_bucket_name}"
 }
 
-# Enable versioning for the S3 bucket
-resource "aws_s3_bucket_versioning" "s3_bucket_versioning" {
-  bucket = aws_s3_bucket.s3_bucket_uploads.id
-  versioning_configuration {
-    status = "Enabled"
-  }
-}
-
 # S3 uses Transfer Acceleration
 # Clients connect to the nearest AWS CloudFront edge location instead. Data is then sent through AWS’s private backbone network to the S3 bucket’s region.
 resource "aws_s3_bucket_accelerate_configuration" "uploads_accel" {

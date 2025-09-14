@@ -7,27 +7,39 @@ exports.handler = async (event) => {
     try {
         console.log("Incoming event:", JSON.stringify(event, null, 2));
 
-        // Extract SNS message
-        const snsMessage = event.Records[0].Sns.Message;
-        const message = JSON.parse(snsMessage);
+        const isBucketAVEnabled = process.env.BUCKET_AV_ENABLED || false;
 
-        const bucket = message.bucket;
-        const fileKey = message.key;
-        const status = message.status;
+        let bucket = "";
+        let fileKey = "";
+        if (isBucketAVEnabled === "true") {
+            // Extract SNS message published by BucketAV
+            const snsMessage = event.Records[0].Sns.Message;
+            const message = JSON.parse(snsMessage);
 
-        // Only process files in uploads/ folder
-        const uploadFolder = (process.env.UPLOAD_FOLDER || "").trim().toLowerCase();
-        const keyLower = fileKey.toLowerCase();
-        if (!keyLower.startsWith(uploadFolder)) {
-            console.log(`Skipping file ${fileKey} with status ${status}. (not under ${uploadFolder})`);
-            return { statusCode: 200, body: "File skipped (not under uploads/)" };
+            bucket = message.bucket;
+            fileKey = message.key;
+            const status = message.status;
+
+            // Only process files in uploads/ folder
+            const uploadFolder = (process.env.UPLOAD_FOLDER || "").trim().toLowerCase();
+            const keyLower = fileKey.toLowerCase();
+            if (!keyLower.startsWith(uploadFolder)) {
+                console.log(`Skipping file ${fileKey} with status ${status}. (not under ${uploadFolder})`);
+                return { statusCode: 200, body: "File skipped (not under uploads/)" };
+            }
+            
+            // Only process "clean" files
+            if (status !== "clean") {
+                console.log(`Skipping file ${fileKey} with status ${status}. File skipped (not clean)`);
+                return { statusCode: 200, body: "File skipped (not clean)" };
+            }
+
+        } else {
+            // Extract bucket and key from the S3 event
+            bucket = event.Records[0].s3.bucket.name;
+            fileKey = event.Records[0].s3.object.key;
         }
-        
-        // Only process "clean" files
-        if (status !== "clean") {
-            console.log(`Skipping file ${fileKey} with status ${status}. File skipped (not clean)`);
-            return { statusCode: 200, body: "File skipped (not clean)" };
-        }
+
 
         // Extract user_id from fileKey (uploads/user123/background.png)
         const keyParts = fileKey.split('/');
