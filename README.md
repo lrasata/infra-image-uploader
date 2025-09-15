@@ -1,4 +1,4 @@
-# Image uploader infrastructure - managed with Terraform on AWS 🚧
+# Image uploader infrastructure - managed with Terraform on AWS
 
 ## Overview
 
