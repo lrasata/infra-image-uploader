@@ -32,7 +32,7 @@ resource "aws_lambda_function" "process_uploaded_file" {
   role = aws_iam_role.lambda_process_uploaded_file_exec_role.arn
 
   timeout     = 30  # seconds
-  memory_size = 512 # more memory = faster processing - TODO should prorbably enfore a max size on upload with get-presigned-url POST request
+  memory_size = var.lambda_memory_size_mb # more memory = faster processing - depending on the max size of the upload file, this can be adjusted
 
   environment {
     variables = {

@@ -49,3 +49,9 @@ variable "bucketav_sns_findings_topic_name" {
   description = "Name of SNS topics where BucketAV publishes findings"
   type        = string
 }
+
+variable "lambda_memory_size_mb" {
+  description = "Memory size in MB value for Lambda processing file which allow faster execution"
+  type = number
+  default = 512
+}

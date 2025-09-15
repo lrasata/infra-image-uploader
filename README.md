@@ -2,8 +2,9 @@
 
 ## Overview
 
-This project provides a **Terraform module** that allows clients to upload image files securely to AWS.
+This project provides a **Terraform module** that allows clients to upload images securely to AWS.
 It supports **optional malware scanning via BucketAV**, thumbnail generation, and user metadata storage in DynamoDB.
+This infrastrcture is a **100% serveless**.
 
 **Flow overview:**
 
@@ -43,18 +44,49 @@ module "image_uploader" {
 > **Prerequisites** to successfully deploy this infrastructure, are described in the Prerequisites section of [DEVELOPMENT.md](DEVELOPMENT.md)
 >
 
+### Access object in S3 uploads private bucket
+
+This section only describes a suggestion/recommendation but how you decide to access S3 uploads bucket depends on your project requirements.
+
+One way to securely serves files from a private S3 bucket is through **CloudFront distribution with Origin Access Control (OAC) + bucket policy**. This way, the bucket stays **private**, and only **CloudFront** can access it. End-users get **signed URLs** or **signed cookies**.
+
+The following outputs are provided by the module to allow a set up with cloudfront.
+
+````text
+output "uploads_bucket_id" {
+  description = "The S3 uploads bucket ID (name)"
+  value       = aws_s3_bucket.s3_bucket_uploads.id
+}
+
+output "uploads_bucket_arn" {
+  description = "The ARN of the S3 uploads bucket"
+  value       = aws_s3_bucket.s3_bucket_uploads.arn
+}
+
+output "uploads_bucket_regional_domain_name" {
+  description = "The regional domain name of the S3 bucket (for CloudFront origin)"
+  value       = aws_s3_bucket.s3_bucket_uploads.bucket_regional_domain_name
+}
+
+Usage : 
+origin_bucket_arn = module.image_uploader.uploads_bucket_arn
+````
+
+> FYI: Currently testing the integration of `image-uploader` within the infrascture of a full-stack web application: [trip-planner-web-app](https://github.com/lrasata/infra-trip-planner-webapp)
+
 ## Key attributes
 
 ### Security
 
 - Optional **BucketAV integration** to scan for malware before files are processed.
-  - BucketAV scan is triggered after each upload and by default it deletes any infected file. (Behaviour can be changed in BucketAV settings)
+  - BucketAV scan is triggered after each upload and by default it deletes any infected file. (This behaviour can be changed in BucketAV settings)
 - All files are stored in **S3 with default encryption SSE-S3**  at rest.
-- **Public access blocked** on the bucket to prevent unauthorized access.
+- **Public access blocked** on the S3 uploads bucket to prevent unauthorized access.
+- **WAF** is attached to API Gateway to filter out bad traffic (bots, throttling, sql injection, etc.). It also blocks any unauthorised requests which do not contain required auth header.
 
 ### Reliability
 
-- AWS Lambda ensures **automatic scaling and high availability**.
+- Lambda ensures **automatic scaling and high availability**.
 - S3 provides effective unlimited storage.
   - Maximum object size: 5 TB per object.
   - Maximum number of objects per bucket: unlimited.
@@ -67,12 +99,6 @@ module "image_uploader" {
 
 ### Maintainability
 
-- **Fully modular Terraform code**, easy to reuse across projects and environments.
+- **This Terraform project is built as a module**, it makes it easy to reuse across projects and environments.
 - **Environment-specific variables** allow dev/staging/prod separation.
 - Lambda functions are decoupled from S3 and SNS triggers, making updates safe and predictable.
-
-## 🔍 Infrastructure choice explanation
-
-- [ ] Why BucketAV (purchased option) vs ClamAV custom code
-- [ ] Why DynamoDB
-- [ ] ... 

@@ -6,9 +6,11 @@
 - Access to **AWS configured**
 - **Secret values** are configured saved in Secrets Manager:
   - secrets : `${var.environment}/image-upload/secrets`
-    - CUSTOM_AUTH_SECRET : Secret value of header X-Custom-Auth which allows client to request presigned url to upload images.
+    - API_GW_AUTH_SECRET : Secret value of header X-Custom-Auth which allows client to request presigned url to upload images.
 - Build `sharp` for Lambda function
   - Refer to [HOW_TO](HOW_TO.md) section
+- **Important:**
+  - Decide what should be the max size of file upload. Depending on this value, you might adjust the **memory size** allocated for Lambda processing file. It can be configured from 128 MB up to 10,240 MB. Default value in this terraform project is **512 MB**
 - Optional: **BucketAV** stack to be successfully deployed.
   - BucketAV is the antivirus used and tested in this project. You can disable it by providing `var.use_bucketav = false`
   - If you decide to use BucketAV (highly recommended), after purchasing it on AWS Marketplace then follow the [steps to deploy the bucketav stack](https://bucketav.com/help/setup-guide/amazon-s3-step-1.html)

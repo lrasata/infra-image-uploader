@@ -51,7 +51,7 @@ resource "aws_wafv2_web_acl" "api_gw_waf" {
           size_constraint_statement {
             field_to_match {
               single_header {
-                name = "x-custom-auth" # must be lowercase
+                name = "x-api-gateway-auth" # must be lowercase
               }
             }
             comparison_operator = "GT" # greater than
@@ -71,9 +71,32 @@ resource "aws_wafv2_web_acl" "api_gw_waf" {
       sampled_requests_enabled   = true
     }
   }
+
+  # Rate limiting per IP
+  rule {
+    name     = "${var.environment}-RateLimitPerIP"
+    priority = 200
+
+    action {
+      block {}
+    }
+
+    statement {
+      rate_based_statement {
+        limit              = 1000
+        aggregate_key_type = "IP"
+      }
+    }
+
+    visibility_config {
+      cloudwatch_metrics_enabled = true
+      metric_name                = "${var.environment}-rateLimit"
+      sampled_requests_enabled   = true
+    }
+  }
 }
 
-# Associate the WAF with API Gateway stage (not execution_arn)
+# Associate the WAF with API Gateway stage
 resource "aws_wafv2_web_acl_association" "api_gw_assoc" {
   resource_arn = aws_api_gateway_stage.api_gateway_stage.arn
   web_acl_arn  = aws_wafv2_web_acl.api_gw_waf.arn

@@ -5,7 +5,7 @@ const REGION = process.env.REGION || "eu-central-1";
 const BUCKET_NAME = process.env.UPLOAD_BUCKET || "s3-bucket-name";
 const UPLOAD_FOLDER = process.env.UPLOAD_FOLDER || "uploads/";
 const EXPIRATION_TIME_S = parseInt(process.env.EXPIRATION_TIME_S || "300");
-const CUSTOM_AUTH_SECRET = process.env.CUSTOM_AUTH_SECRET;
+const API_GW_AUTH_SECRET = process.env.API_GW_AUTH_SECRET;
 
 const s3 = new AWS.S3({
     region: REGION,
@@ -22,9 +22,9 @@ const corsHeaders = {
 
 exports.handler = async (event) => {
     const headers = event.headers || {};
-    const customHeader = headers["x-custom-auth"];
+    const customHeader = headers["x-api-gateway-auth"];
 
-    if (customHeader !== CUSTOM_AUTH_SECRET) {
+    if (customHeader !== API_GW_AUTH_SECRET) {
         return {
             statusCode: 403,
             headers: corsHeaders,
