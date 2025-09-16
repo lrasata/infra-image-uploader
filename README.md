@@ -44,13 +44,13 @@ module "image_uploader" {
 > **Prerequisites** to successfully deploy this infrastructure, are described in the Prerequisites section of [DEVELOPMENT.md](DEVELOPMENT.md)
 >
 
-### Access object in S3 uploads private bucket
+### Access object in S3 private uploads bucket
 
-This section only describes a suggestion/recommendation but how you decide to access S3 uploads bucket depends on your project requirements.
+This section only describes a suggestion/recommendation. But how you decide to access S3 private uploads bucket depends on your project requirements.
 
-One way to securely serves files from a private S3 bucket is through **CloudFront distribution with Origin Access Control (OAC) + bucket policy**. This way, the bucket stays **private**, and only **CloudFront** can access it. End-users get **signed URLs** or **signed cookies**.
+One way to securely serve files from a private S3 bucket is through **CloudFront distribution with Origin Access Control (OAC) + bucket policy**. This way, the bucket stays **private**, and only **CloudFront** can access it. End-users get **signed URLs** or **signed cookies** to access objects within the private S§ bucket.
 
-The following outputs are provided by the module to allow a set up with cloudfront.
+The following outputs are provided by the module to allow a set up with Cloudfront distribution.
 
 ````text
 output "uploads_bucket_id" {
@@ -102,3 +102,32 @@ origin_bucket_arn = module.image_uploader.uploads_bucket_arn
 - **This Terraform project is built as a module**, it makes it easy to reuse across projects and environments.
 - **Environment-specific variables** allow dev/staging/prod separation.
 - Lambda functions are decoupled from S3 and SNS triggers, making updates safe and predictable.
+
+## Infrastructure choices
+
+### Why use DynamoDB instead of RDS
+
+Using S3 for file storage is a standard practice, but for metadata storage we chose DynamoDB over a relational database (RDS).
+
+- **Serverless alignment**: DynamoDB integrates naturally with the rest of the serverless stack (S3 + Lambda + API Gateway), ensuring consistent scalability and availability without managing servers.
+- **Scalability & performance**: DynamoDB scales automatically with unpredictable upload traffic, delivering single-digit millisecond latency for lookups.
+- **Fit for the use case**: The image uploader only requires simple, fast lookups (e.g., get file key or thumbnail URL by user). This doesn’t require complex relational queries, making DynamoDB the most efficient choice.
+
+### Why BucketAV (or other proprietary AV) instead of using ClamAV (open-source) in Lambda
+
+**TL;DR** For enterprise-grade, scalable, and low-maintenance infrastructure, a managed AV solution such as BucketAV is the pragmatic choice. While it reduces engineering overhead, it comes at [a cost](https://bucketav.com/pricing/) but it often proves cheaper in the long run when factoring in DevOps time, maintenance, and risk.
+
+**Key considerations:**
+
+- **Operational simplicity:** BucketAV abstracts away the AV infrastructure and is delivered as a ready-to-use CloudFormation stack with configurable options.
+- **Maintenance burden:** Running ClamAV inside Lambda requires building and maintaining a Lambda Layer with ClamAV binaries and virus definitions. Building that layer (from experience) is painful and comes with challenges:
+  - Lambda layer size limit (250 MB uncompressed) can easily be exceeded by ClamAV signatures.
+  - Requires cross-compiling ClamAV for Amazon Linux 2.
+  - Virus definitions must be constantly updated, requiring rebuilds and redeployments.
+  
+With BucketAV (or equivalent managed AV), patching, signature updates, and scaling are handled by the vendor.
+
+- **Enterprise features:** Managed solutions like BucketAV provide features out of the box:
+  - Quarantine buckets for infected files
+  - Integration with SNS (used here to trigger downstream Lambda only after a file is marked “clean”)
+  - Logging, monitoring, and compliance reporting
