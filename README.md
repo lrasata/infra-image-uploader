@@ -27,7 +27,7 @@ Use in a terraform project by importing the module:
 
 ```text
 module "image_uploader" {
-  source = "git::https://github.com/lrasata/infra-image-uploader.git?ref=v1.0.0"
+  source = "git::https://github.com/lrasata/infra-image-uploader.git//modules/image_uploader?ref=v1.0.0"
 
   region                                        = var.region
   environment                                   = var.environment
