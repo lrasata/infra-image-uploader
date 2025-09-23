@@ -16,7 +16,7 @@ const s3 = new AWS.S3({
 const corsHeaders = {
     "Content-Type": "application/json",
     "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Headers": "Content-Type",
+    "Access-Control-Allow-Headers": "Content-Type,x-api-gateway-auth",
     "Access-Control-Allow-Methods": "GET,OPTIONS,PUT",
 };
 
@@ -43,7 +43,7 @@ exports.handler = async (event) => {
         return {
             statusCode: 400,
             headers: corsHeaders,
-            body: JSON.stringify({ error: "Body is malformed" })
+            body: JSON.stringify({ error: "Query params could be missing" })
         };
     }
 

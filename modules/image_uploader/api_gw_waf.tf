@@ -36,42 +36,6 @@ resource "aws_wafv2_web_acl" "api_gw_waf" {
     }
   }
 
-  # Block if header X-Custom-Auth is missing
-  rule {
-    name     = "${var.environment}-BlockIfMissingCustomHeader"
-    priority = 2
-
-    action {
-      block {}
-    }
-
-    statement {
-      not_statement {
-        statement {
-          size_constraint_statement {
-            field_to_match {
-              single_header {
-                name = "x-api-gateway-auth" # must be lowercase
-              }
-            }
-            comparison_operator = "GT" # greater than
-            size                = 0    # header length must be > 0
-            text_transformation {
-              priority = 0
-              type     = "NONE"
-            }
-          }
-        }
-      }
-    }
-
-    visibility_config {
-      cloudwatch_metrics_enabled = true
-      metric_name                = "${var.environment}-blockMissingCustomHeader"
-      sampled_requests_enabled   = true
-    }
-  }
-
   # Rate limiting per IP
   rule {
     name     = "${var.environment}-RateLimitPerIP"

@@ -35,3 +35,16 @@ resource "aws_s3_bucket_public_access_block" "s3_bucket_public_access" {
   ignore_public_acls      = true
   restrict_public_buckets = true
 }
+
+# Allows the web browser to PUT directly to S3 using presigned url. S3 is the one handling the CORS preflight
+resource "aws_s3_bucket_cors_configuration" "uploads_cors" {
+  bucket = aws_s3_bucket.s3_bucket_uploads.id
+
+  cors_rule {
+    allowed_methods = ["PUT", "GET", "HEAD"]
+    allowed_origins = ["*"]
+    allowed_headers = ["*"]
+    expose_headers  = ["ETag"]
+    max_age_seconds = 3000
+  }
+}

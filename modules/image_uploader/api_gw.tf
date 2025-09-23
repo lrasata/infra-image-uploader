@@ -52,6 +52,7 @@ resource "aws_api_gateway_integration_response" "options_integration_response" {
   status_code = aws_api_gateway_method_response.options_response.status_code
 
   response_parameters = {
+    "method.response.header.Access-Control-Allow-Headers" = "'Content-Type,X-Amz-Date,Authorization,x-api-gateway-auth,X-Requested-With,Accept,Origin'"
     "method.response.header.Access-Control-Allow-Methods" = "'GET,OPTIONS,PUT'",
     "method.response.header.Access-Control-Allow-Origin"  = "'*'"
   }
@@ -95,7 +96,14 @@ resource "aws_api_gateway_deployment" "deployment" {
   rest_api_id = aws_api_gateway_rest_api.api.id
 
   triggers = {
-    redeployment = sha1(jsonencode(aws_api_gateway_rest_api.api.body))
+    redeployment = sha1(jsonencode([
+      aws_api_gateway_method.options_method.id,
+      aws_api_gateway_integration.options_integration.id,
+      aws_api_gateway_method_response.options_response.id,
+      aws_api_gateway_integration_response.options_integration_response.id,
+      aws_api_gateway_method.get_method.id,
+      aws_api_gateway_integration.lambda_integration.id
+    ]))
   }
 
   depends_on = [
