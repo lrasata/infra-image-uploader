@@ -1,6 +1,15 @@
 resource "null_resource" "npm_install_process_uploaded_file_lambda" {
   provisioner "local-exec" {
-    command = "bash ${path.module}/lambda_process_uploaded_file/build.sh"
+    # Detect OS and run Docker + npm commands in a single inline command
+    command = <<EOT
+      if [ -x "$(command -v bash)" ]; then
+        # Linux/macOS/WSL
+        docker run --rm -v "${path.module}/lambda_process_uploaded_file:/var/task" -w /var/task public.ecr.aws/lambda/nodejs:20 /bin/bash -c "if [ -f package-lock.json ]; then npm ci; else npm install; fi && npm install sharp aws-sdk"
+      else
+        # Windows cmd.exe fallback
+        docker run --rm -v "%cd%\\${path.module.replace("/", "\\")}/lambda_process_uploaded_file:/var/task" -w /var/task public.ecr.aws/lambda/nodejs:20 /bin/bash -c "if [ -f package-lock.json ]; then npm ci; else npm install; fi && npm install sharp aws-sdk"
+      fi
+    EOT
   }
 
   triggers = {
