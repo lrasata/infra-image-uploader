@@ -1,6 +1,6 @@
 resource "null_resource" "npm_install_process_uploaded_file_lambda" {
   provisioner "local-exec" {
-    command = "docker run --rm -v ${abspath("${path.module}/lambda_process_uploaded_file")}:/var/task -w /var/task public.ecr.aws/lambda/nodejs:20 /bin/bash -c \"if [ -f package-lock.json ]; then npm ci; else npm install; fi && npm install sharp aws-sdk\""
+    command = "docker run --rm -v ${abspath("${path.module}/lambda_process_uploaded_file")}:/var/task -w /var/task node:20-bullseye bash -c \"if [ -f package-lock.json ]; then npm ci; else npm install; fi && npm install sharp aws-sdk\""
   }
 
   triggers = {
