@@ -1,7 +1,10 @@
 resource "null_resource" "npm_install_process_uploaded_file_lambda" {
   provisioner "local-exec" {
     command = <<EOT
-docker run --rm -v "${abspath("${path.module}/lambda_process_uploaded_file")}:/var/task" -w /var/task public.ecr.aws/lambda/nodejs:20 /bin/bash -c "if [ -f package-lock.json ]; then npm ci; else npm install; fi && npm install sharp aws-sdk"
+docker run --rm -v "$(echo ${abspath("${path.module}/lambda_process_uploaded_file}") | sed 's#\\#/#g; s#^\([A-Za-z]\):#/\\1#'):/var/task" \
+  -w /var/task \
+  public.ecr.aws/lambda/nodejs:20 \
+  /bin/bash -c "if [ -f package-lock.json ]; then npm ci; else npm install; fi && npm install sharp aws-sdk"
 EOT
   }
 
@@ -9,6 +12,7 @@ EOT
     always_run = timestamp()
   }
 }
+
 
 
 data "archive_file" "lambda_process_uploaded_file_zip" {
