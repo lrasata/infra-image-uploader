@@ -10,6 +10,16 @@ EOT
   }
 }
 
+
+data "archive_file" "lambda_process_uploaded_file_zip" {
+  type        = "zip"
+  source_dir  = "${path.module}/lambda_process_uploaded_file"
+  output_path = "${path.module}/lambda_process_uploaded_file.zip"
+
+  excludes   = ["node_modules/.bin/*"]
+  depends_on = [null_resource.npm_install_process_uploaded_file_lambda]
+}
+
 resource "aws_iam_role" "lambda_process_uploaded_file_exec_role" {
   name = "${var.environment}-lambda-process-uploaded-file-exec-role"
 
