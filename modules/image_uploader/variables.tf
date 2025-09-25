@@ -55,3 +55,8 @@ variable "lambda_memory_size_mb" {
   type = number
   default = 512
 }
+
+variable "lambda_process_uploaded_file_dir" {
+  description = "Path to built Lambda directory, including node_modules"
+  type        = string
+}

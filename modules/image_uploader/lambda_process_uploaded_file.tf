@@ -1,9 +1,9 @@
 data "archive_file" "lambda_process_uploaded_file_zip" {
-  type        = "zip"
-  source_dir  = "${path.module}/lambda_process_uploaded_file"
+  type       = "zip"
+  source_dir = var.lambda_process_uploaded_file_dir
   output_path = "${path.module}/lambda_process_uploaded_file.zip"
 
-  excludes = ["node_modules/.bin/*"]
+  excludes   = ["node_modules/.bin/*"]
 }
 
 resource "aws_iam_role" "lambda_process_uploaded_file_exec_role" {

@@ -8,11 +8,11 @@ See in folder: `modules\image_uploader\lambda_process_uploaded_file\processUploa
 
 Please refer to [the official documentation](https://www.npmjs.com/package/sharp)
 
-Execute commands locally in the folder : `cd infra-image-uploader\modules\image_uploader\lambda_process_uploaded_file`
+Execute commands locally in the folder : `cd \modules\image_uploader\lambda_process_uploaded_file`
 
 ## On Windows
 
-Execute  the following commands locally in the folder : `cd infra-image-uploader\modules\image_uploader`
+Execute  the following commands locally in the folder : `cd infra-image-uploader\modules\image_uploader\lambda_process_uploaded_file`
 
 ### Run an Amazon Linux container
 
@@ -23,7 +23,7 @@ Execute  the following commands locally in the folder : `cd infra-image-uploader
 ```txt
 dnf install -y nodejs npm make gcc-c++ libpng-devel
 
-cd /var/task/lambda_process_uploaded_file
+cd /var/task
 npm install sharp
 
 exit

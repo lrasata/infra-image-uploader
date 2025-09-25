@@ -1,6 +1,6 @@
 {
   "name": "process-uploaded-file",
-  "version": "1.0.0",
+  "version": "1.0.20",
   "main": "processUploadedFile.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -10,6 +10,6 @@
   "description": "",
   "dependencies": {
     "aws-sdk": "^2.1692.0",
-    "sharp": "^0.34.3"
+    "sharp": "^0.33.5"
   }
 }

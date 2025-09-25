@@ -1,6 +1,8 @@
 module "image_uploader" {
   source = "./modules/image_uploader"
 
+  lambda_process_uploaded_file_dir = "./modules/image_uploader/lambda_process_uploaded_file"
+
   region                                        = var.region
   environment                                   = var.environment
   api_image_upload_domain_name                  = var.api_image_upload_domain_name

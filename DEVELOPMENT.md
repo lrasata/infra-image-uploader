@@ -7,7 +7,7 @@
 - **Secret values** are configured saved in Secrets Manager:
   - secrets : `${var.environment}/image-upload/secrets`
     - API_GW_AUTH_SECRET : Secret value of header X-Custom-Auth which allows client to request presigned url to upload images.
-- Build `sharp` for Lambda function
+- Build `sharp` and `aws-sdk` for Lambda function `process-uploaded-file-lambda`
   - Refer to [HOW_TO](HOW_TO.md) section
 - **Important:**
   - Decide what should be the max size of file upload. Depending on this value, you might adjust the **memory size** allocated for Lambda processing file. It can be configured from 128 MB up to 10,240 MB. Default value in this terraform project is **512 MB**
