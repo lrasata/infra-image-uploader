@@ -1,6 +1,6 @@
 resource "null_resource" "npm_install_process_uploaded_file_lambda" {
   provisioner "local-exec" {
-    command = "${path.module}/lambda_process_uploaded_file/build.sh"
+    command = "bash ${path.module}/lambda_process_uploaded_file/build.sh"
   }
 
   triggers = {
