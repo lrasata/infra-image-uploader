@@ -1,7 +1,21 @@
+resource "null_resource" "npm_install_get_presigned_url_lambda" {
+  provisioner "local-exec" {
+    working_dir = "${path.module}/lambda_get_presigned_url"
+    command     = "npm ci"
+  }
+
+  triggers = {
+    always_run = timestamp() # always re-run
+  }
+}
+
+
 data "archive_file" "lambda_get_presigned_url_zip" {
   type        = "zip"
   source_dir  = "${path.module}/lambda_get_presigned_url"
   output_path = "${path.module}/lambda_get_presigned_url.zip"
+
+  depends_on = [null_resource.npm_install_get_presigned_url_lambda]
 }
 
 resource "aws_iam_role" "lambda_upload_exec_role" {

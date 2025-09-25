@@ -1,9 +1,26 @@
+resource "null_resource" "npm_install_process_uploaded_file_lambda" {
+  provisioner "local-exec" {
+    working_dir = "${path.module}/lambda_process_uploaded_file"
+    command     = <<EOT
+      docker run --rm -v $(pwd):/var/task \
+        -w /var/task \
+        public.ecr.aws/lambda/nodejs:20 \
+        /bin/bash -c "npm ci && npm install sharp"
+    EOT
+  }
+
+  triggers = {
+    always_run = timestamp() # always re-run
+  }
+}
+
 data "archive_file" "lambda_process_uploaded_file_zip" {
   type        = "zip"
   source_dir  = "${path.module}/lambda_process_uploaded_file"
   output_path = "${path.module}/lambda_process_uploaded_file.zip"
 
   excludes = ["node_modules/.bin/*"]
+  depends_on = [null_resource.npm_install_process_uploaded_file_lambda]
 }
 
 resource "aws_iam_role" "lambda_process_uploaded_file_exec_role" {
