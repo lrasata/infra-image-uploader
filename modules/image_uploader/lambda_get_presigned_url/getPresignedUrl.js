@@ -16,13 +16,13 @@ const s3 = new AWS.S3({
 const corsHeaders = {
     "Content-Type": "application/json",
     "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Headers": "Content-Type,x-api-gateway-auth",
+    "Access-Control-Allow-Headers": "Content-Type,x-api-gateway-img-upload-auth",
     "Access-Control-Allow-Methods": "GET,OPTIONS,PUT",
 };
 
 exports.handler = async (event) => {
     const headers = event.headers || {};
-    const customHeader = headers["x-api-gateway-auth"];
+    const customHeader = headers["x-api-gateway-img-upload-auth"];
 
     if (customHeader !== API_GW_AUTH_SECRET) {
         return {
