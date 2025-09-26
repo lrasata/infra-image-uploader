@@ -1,21 +1,9 @@
-resource "null_resource" "npm_install_process_uploaded_file_lambda" {
-  provisioner "local-exec" {
-    command = "docker run --rm -v ${abspath("${path.module}/lambda_process_uploaded_file")}:/var/task -w /var/task node:20-bullseye bash -c \"if [ -f package-lock.json ]; then npm ci; else npm install; fi && npm install sharp aws-sdk\""
-  }
-
-  triggers = {
-    always_run = timestamp()
-  }
-}
-
-
 data "archive_file" "lambda_process_uploaded_file_zip" {
-  type        = "zip"
-  source_dir  = "${path.module}/lambda_process_uploaded_file"
+  type       = "zip"
+  source_dir = var.lambda_process_uploaded_file_dir
   output_path = "${path.module}/lambda_process_uploaded_file.zip"
 
   excludes   = ["node_modules/.bin/*"]
-  depends_on = [null_resource.npm_install_process_uploaded_file_lambda]
 }
 
 resource "aws_iam_role" "lambda_process_uploaded_file_exec_role" {
