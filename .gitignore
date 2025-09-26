@@ -28,7 +28,7 @@ override.tf.json
 # avoid accidental push
 .env
 dist
-*.zip
+modules/**/*.zip
 modules/image_uploader/lambda_process_uploaded_file/node_modules
 modules/image_uploader/lambda_get_presigned_url/node_modules
 test_scripts
