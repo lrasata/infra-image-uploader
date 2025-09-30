@@ -2,8 +2,8 @@
 resource "aws_dynamodb_table" "files_per_user_metadata" {
   name         = "${var.environment}-files-per-user-metadata"
   billing_mode = "PAY_PER_REQUEST"
-  hash_key     = "file_key" # partition key
-  range_key    = "user_id"  # sort key
+  hash_key     = "user_id" # partition key
+  range_key    = "file_key"  # sort key
 
   attribute {
     name = "user_id"
