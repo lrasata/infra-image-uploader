@@ -39,7 +39,7 @@ resource "aws_lambda_function" "process_uploaded_file" {
       BUCKET_AV_ENABLED = var.use_bucketav
       UPLOAD_FOLDER     = local.UPLOAD_FOLDER
       THUMBNAIL_FOLDER  = local.THUMBNAIL_FOLDER
-      DYNAMO_TABLE      = aws_dynamodb_table.files_per_user_metadata.name
+      DYNAMO_TABLE      = aws_dynamodb_table.files_metadata.name
     }
   }
 }
@@ -54,7 +54,7 @@ resource "aws_iam_policy" "gt_s3_access_policy" {
       {
         Effect   = "Allow",
         Action   = ["dynamodb:PutItem"],
-        Resource = aws_dynamodb_table.files_per_user_metadata.arn
+        Resource = aws_dynamodb_table.files_metadata.arn
       },
       {
         Action = ["s3:GetObject", "s3:GetObjectVersion", "s3:ListBucket", "s3:PutObject"]
