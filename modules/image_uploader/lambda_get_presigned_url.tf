@@ -51,6 +51,8 @@ resource "aws_lambda_function" "get_presigned_url" {
       API_GW_AUTH_SECRET = local.auth_secret
       UPLOAD_FOLDER      = local.UPLOAD_FOLDER
       USE_S3_ACCEL       = var.enable_transfer_acceleration
+      PARTITION_KEY      = var.dynamodb_partition_key
+      SORT_KEY           = var.dynamodb_sort_key
     }
   }
 

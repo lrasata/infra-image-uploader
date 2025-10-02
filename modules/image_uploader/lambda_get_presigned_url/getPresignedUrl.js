@@ -6,6 +6,8 @@ const BUCKET_NAME = process.env.UPLOAD_BUCKET || "s3-bucket-name";
 const UPLOAD_FOLDER = process.env.UPLOAD_FOLDER || "uploads/";
 const EXPIRATION_TIME_S = parseInt(process.env.EXPIRATION_TIME_S || "300");
 const API_GW_AUTH_SECRET = process.env.API_GW_AUTH_SECRET;
+const PARTITION_KEY = process.env.PARTITION_KEY || "user_id";
+const SORT_KEY = process.env.PARTITION_KEY || "file_key";
 
 const s3 = new AWS.S3({
     region: REGION,
@@ -34,12 +36,12 @@ exports.handler = async (event) => {
 
     const query = event.queryStringParameters || {};
 
-    // Client must send userId, filename, extension
-    const userId = query.userId;
-    const originalFilename = query.filename;
+    // Client must send tripId, filename, extension
+    const partitionKey = query[PARTITION_KEY];
+    const originalFilename = query[SORT_KEY];
     const extension = query.ext;
 
-    if (!userId || !originalFilename || !extension) {
+    if (!partitionKey || !originalFilename || !extension) {
         return {
             statusCode: 400,
             headers: corsHeaders,
@@ -51,8 +53,8 @@ exports.handler = async (event) => {
         // Generate a random unique filename
         const randomId = crypto.randomBytes(16).toString("base64url"); // URL-safe base64
 
-        // Build key: uploads/<user_id>/<randomId>_<filename>.<extension>
-        const fileKey = `${UPLOAD_FOLDER}${userId}/${randomId}_${originalFilename}${extension ? "." + extension : ""}`;
+        // Build key: uploads/<partition_key>/<randomId>_<filename>.<extension>
+        const fileKey = `${UPLOAD_FOLDER}${partitionKey}/${randomId}_${originalFilename}${extension ? "." + extension : ""}`;
 
         // Generate presigned PUT URL
         const presignedUrl = s3.getSignedUrl("putObject", {

@@ -40,6 +40,7 @@ resource "aws_lambda_function" "process_uploaded_file" {
       UPLOAD_FOLDER     = local.UPLOAD_FOLDER
       THUMBNAIL_FOLDER  = local.THUMBNAIL_FOLDER
       DYNAMO_TABLE      = aws_dynamodb_table.files_metadata.name
+      PARTITION_KEY      = var.dynamodb_partition_key
     }
   }
 }

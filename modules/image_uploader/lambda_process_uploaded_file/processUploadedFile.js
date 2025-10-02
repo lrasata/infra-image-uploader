@@ -3,6 +3,8 @@ const S3 = new AWS.S3();
 const DynamoDB = new AWS.DynamoDB.DocumentClient();
 const sharp = require('sharp');
 
+const PARTITION_KEY = process.env.PARTITION_KEY || "user_id";
+
 exports.handler = async (event) => {
     try {
         console.log("Incoming event:", JSON.stringify(event, null, 2));
@@ -43,7 +45,7 @@ exports.handler = async (event) => {
 
         // Extract user_id from fileKey (uploads/user123/background.png)
         const keyParts = fileKey.split('/');
-        const userId = keyParts[1];
+        const partitionKey = keyParts[1];
         const filename = keyParts[keyParts.length - 1];
 
         // Download original image
@@ -56,7 +58,7 @@ exports.handler = async (event) => {
             .toBuffer();
 
         // Define thumbnail key
-        const thumbKey = `${process.env.THUMBNAIL_FOLDER}${userId}/${filename}`;
+        const thumbKey = `${process.env.THUMBNAIL_FOLDER}${partitionKey}/${filename}`;
 
         // Upload thumbnail back to S3
         await S3.putObject({
@@ -70,7 +72,7 @@ exports.handler = async (event) => {
         const tableName = process.env.DYNAMO_TABLE;
         const item = {
             file_key: fileKey,   // partition key
-            user_id: userId,     // sort key
+            [PARTITION_KEY]: partitionKey,     // sort key
             thumbnail_key: thumbKey
         };
 
