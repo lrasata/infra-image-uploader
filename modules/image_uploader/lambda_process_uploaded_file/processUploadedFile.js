@@ -43,9 +43,10 @@ exports.handler = async (event) => {
         }
 
 
-        // Extract user_id from fileKey (uploads/user123/background.png)
+        // Extract data from fileKey (uploads/trips/1/background.png)
         const keyParts = fileKey.split('/');
-        const partitionKey = keyParts[1];
+        const apiResource = keyParts[1];
+        const partitionKey = keyParts[2];
         const filename = keyParts[keyParts.length - 1];
 
         // Download original image
@@ -58,7 +59,7 @@ exports.handler = async (event) => {
             .toBuffer();
 
         // Define thumbnail key
-        const thumbKey = `${process.env.THUMBNAIL_FOLDER}${partitionKey}/${filename}`;
+        const thumbKey = `${process.env.THUMBNAIL_FOLDER}${apiResource}/${partitionKey}/${filename}`;
 
         // Upload thumbnail back to S3
         await S3.putObject({
@@ -71,9 +72,10 @@ exports.handler = async (event) => {
         // Save metadata to DynamoDB
         const tableName = process.env.DYNAMO_TABLE;
         const item = {
-            file_key: fileKey,   // partition key
-            [PARTITION_KEY]: partitionKey,     // sort key
-            thumbnail_key: thumbKey
+            file_key: fileKey,   // sort key
+            [PARTITION_KEY]: partitionKey,
+            thumbnail_key: thumbKey,
+            resource: apiResource
         };
 
         await DynamoDB.put({

@@ -36,10 +36,11 @@ exports.handler = async (event) => {
 
     const query = event.queryStringParameters || {};
 
-    // Client must send tripId, filename, extension
+    // Client must send tripId, filename, extension, resource (name in plurals)
     const partitionKey = query[PARTITION_KEY];
     const originalFilename = query[SORT_KEY];
     const extension = query.ext;
+    const apiResource = query.resource;
 
     if (!partitionKey || !originalFilename || !extension) {
         return {
@@ -53,8 +54,8 @@ exports.handler = async (event) => {
         // Generate a random unique filename
         const randomId = crypto.randomBytes(16).toString("base64url"); // URL-safe base64
 
-        // Build key: uploads/<partition_key>/<randomId>_<filename>.<extension>
-        const fileKey = `${UPLOAD_FOLDER}${partitionKey}/${randomId}_${originalFilename}${extension ? "." + extension : ""}`;
+        // Build key: uploads/<resource>/<partition_key>/<randomId>_<filename>.<extension>
+        const fileKey = `${UPLOAD_FOLDER}${apiResource}/${partitionKey}/${randomId}_${originalFilename}${extension ? "." + extension : ""}`;
 
         // Generate presigned PUT URL
         const presignedUrl = s3.getSignedUrl("putObject", {
