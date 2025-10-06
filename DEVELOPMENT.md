@@ -75,6 +75,35 @@ terraform plan -var-file="staging.tfvars"
 terraform apply -var-file="staging.tfvars"
 ````
 
+## Usage 
+
+Use the specified API Gateway endpoint to request a presigned URL to upload an image.
+
+````text
+# Endpoint that returns the presigned URL
+presign_endpoint =  "https://${api_image_upload_domain_name}/upload-url"
+````
+
+Specify the secret value of the header `x-api-gateway-img-upload-auth`
+
+````text
+# Custom auth header required by your Lambda
+headers = {
+    "x-api-gateway-img-upload-auth": "secret"
+}
+````
+
+Provide the following query parameters:
+
+````text
+params = {
+  [partition_key]: "trip_id",
+  [sort_key]: "filename",
+  "ext": "png",
+  "resource": "trips"
+}
+````
+
 ## Notes
 
 - Always review the output of terraform plan before applying changes.
