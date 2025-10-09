@@ -41,6 +41,7 @@ resource "aws_lambda_function" "process_uploaded_file" {
       THUMBNAIL_FOLDER  = local.THUMBNAIL_FOLDER
       DYNAMO_TABLE      = aws_dynamodb_table.files_metadata.name
       PARTITION_KEY      = var.dynamodb_partition_key
+      SORT_KEY           = var.dynamodb_sort_key
     }
   }
 }
@@ -54,7 +55,11 @@ resource "aws_iam_policy" "gt_s3_access_policy" {
     Statement = [
       {
         Effect   = "Allow",
-        Action   = ["dynamodb:PutItem"],
+        Action   = [
+          "dynamodb:Query",
+          "dynamodb:PutItem",
+          "dynamodb:UpdateItem"
+        ],
         Resource = aws_dynamodb_table.files_metadata.arn
       },
       {

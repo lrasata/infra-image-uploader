@@ -4,6 +4,7 @@ const DynamoDB = new AWS.DynamoDB.DocumentClient();
 const sharp = require('sharp');
 
 const PARTITION_KEY = process.env.PARTITION_KEY || "user_id";
+const SORT_KEY = process.env.SORT_KEY || "file_key";
 
 exports.handler = async (event) => {
     try {
@@ -69,19 +70,50 @@ exports.handler = async (event) => {
             ContentType: originalObject.ContentType
         }).promise();
 
-        // Save metadata to DynamoDB
         const tableName = process.env.DYNAMO_TABLE;
-        const item = {
-            file_key: fileKey,   // sort key
+
+        // Query for existing items with selected = true for the same partitionKey
+        // only one item per partitionKey/sortKey combination has selected = true
+        const existing = await DynamoDB.query({
+            TableName: tableName,
+            KeyConditionExpression: "#pk = :pk",
+            FilterExpression: "selected = :trueVal",
+            ExpressionAttributeNames: { "#pk": PARTITION_KEY },
+            ExpressionAttributeValues: { ":pk": partitionKey, ":trueVal": true }
+        }).promise();
+
+        const transactItems = [];
+
+        // Set selected = false for existing item(s)
+        existing.Items.forEach(item => {
+            transactItems.push({
+                Update: {
+                    TableName: tableName,
+                    Key: { [PARTITION_KEY]: item[PARTITION_KEY], [SORT_KEY]: item[SORT_KEY] },
+                    UpdateExpression: "SET selected = :falseVal",
+                    ExpressionAttributeValues: { ":falseVal": false }
+                }
+            });
+        });
+
+        // Put new item with selected = true
+        const newItem = {
             [PARTITION_KEY]: partitionKey,
+            [SORT_KEY]: fileKey,
             thumbnail_key: thumbKey,
-            resource: apiResource
+            resource: apiResource,
+            selected: true
         };
 
-        await DynamoDB.put({
-            TableName: tableName,
-            Item: item
-        }).promise();
+        transactItems.push({
+            Put: {
+                TableName: tableName,
+                Item: newItem
+            }
+        });
+
+        // Execute transaction
+        await DynamoDB.transactWrite({ TransactItems: transactItems }).promise();
 
         return {
             statusCode: 200,
