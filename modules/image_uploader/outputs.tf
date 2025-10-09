@@ -17,3 +17,8 @@ output "uploads_bucket_regional_domain_name" {
   description = "The regional domain name of the S3 bucket (for CloudFront origin)"
   value       = aws_s3_bucket.s3_bucket_uploads.bucket_regional_domain_name
 }
+
+output "dynamo_db_table_name" {
+  description = "The name of the DynamoDB table"
+  value       = aws_dynamodb_table.files_metadata.name
+}
