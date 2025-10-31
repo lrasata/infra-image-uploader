@@ -3,10 +3,6 @@ resource "null_resource" "npm_install_get_presigned_url_lambda" {
     working_dir = "${path.module}/lambda_get_presigned_url"
     command     = "npm ci"
   }
-
-  triggers = {
-    always_run = timestamp() # always re-run
-  }
 }
 
 
