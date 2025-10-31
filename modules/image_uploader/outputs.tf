@@ -20,5 +20,5 @@ output "uploads_bucket_regional_domain_name" {
 
 output "dynamo_db_table_name" {
   description = "The name of the DynamoDB table"
-  value       = aws_dynamodb_table.files_metadata.name
+  value       = aws_dynamodb_table.files_metadata_table.name
 }
