@@ -39,7 +39,7 @@ resource "aws_lambda_function" "process_uploaded_file" {
       BUCKET_AV_ENABLED = var.use_bucketav
       UPLOAD_FOLDER     = local.UPLOAD_FOLDER
       THUMBNAIL_FOLDER  = local.THUMBNAIL_FOLDER
-      DYNAMO_TABLE      = aws_dynamodb_table.files_metadata.name
+      DYNAMO_TABLE      = aws_dynamodb_table.files_metadata_table.name
       PARTITION_KEY      = var.dynamodb_partition_key
       SORT_KEY           = var.dynamodb_sort_key
     }
@@ -60,7 +60,7 @@ resource "aws_iam_policy" "gt_s3_access_policy" {
           "dynamodb:PutItem",
           "dynamodb:UpdateItem"
         ],
-        Resource = aws_dynamodb_table.files_metadata.arn
+        Resource = aws_dynamodb_table.files_metadata_table.arn
       },
       {
         Action = ["s3:GetObject", "s3:GetObjectVersion", "s3:ListBucket", "s3:PutObject"]

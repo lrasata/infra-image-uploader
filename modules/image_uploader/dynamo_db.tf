@@ -1,9 +1,8 @@
-# DynamoDB table for file metadata
-resource "aws_dynamodb_table" "files_metadata" {
+resource "aws_dynamodb_table" "files_metadata_table" {
   name         = "${var.environment}-files-metadata"
   billing_mode = "PAY_PER_REQUEST"
-  hash_key     = var.dynamodb_partition_key # partition key
-  range_key    = var.dynamodb_sort_key  # sort key
+  hash_key     = var.dynamodb_partition_key
+  range_key    = var.dynamodb_sort_key
 
   attribute {
     name = var.dynamodb_partition_key
@@ -15,10 +14,13 @@ resource "aws_dynamodb_table" "files_metadata" {
     type = "S"
   }
 
-  # in terraform you only need to declare partition and sort keys as attributes
-  # other attributes can be added dynamically when inserting items
-
   tags = {
     Environment = var.environment
+  }
+
+  deletion_protection_enabled = var.environment == "prod" ? true : false
+
+  point_in_time_recovery {
+    enabled = true
   }
 }
