@@ -97,8 +97,8 @@ Provide the following query parameters:
 
 ````text
 params = {
-  [partition_key]: "trip_id",
-  [sort_key]: "filename",
+  [partition_key]: "id",
+  [sort_key]: "file_key",
   "ext": "png",
   "resource": "trips"
 }

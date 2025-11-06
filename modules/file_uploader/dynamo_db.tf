@@ -1,16 +1,20 @@
+locals {
+  partition_key = "id"
+  sort_key      = "file_key"
+}
 resource "aws_dynamodb_table" "files_metadata_table" {
   name         = "${var.environment}-files-metadata"
   billing_mode = "PAY_PER_REQUEST"
-  hash_key     = var.dynamodb_partition_key
-  range_key    = var.dynamodb_sort_key
+  hash_key     = local.partition_key
+  range_key    = local.sort_key
 
   attribute {
-    name = var.dynamodb_partition_key
+    name = local.partition_key
     type = "S"
   }
 
   attribute {
-    name = var.dynamodb_sort_key
+    name = local.sort_key
     type = "S"
   }
 

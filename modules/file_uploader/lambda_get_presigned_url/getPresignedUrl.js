@@ -6,7 +6,7 @@ const BUCKET_NAME = process.env.UPLOAD_BUCKET || "s3-bucket-name";
 const UPLOAD_FOLDER = process.env.UPLOAD_FOLDER || "uploads/";
 const EXPIRATION_TIME_S = parseInt(process.env.EXPIRATION_TIME_S || "300");
 const API_GW_AUTH_SECRET = process.env.API_GW_AUTH_SECRET;
-const PARTITION_KEY = process.env.PARTITION_KEY || "user_id";
+const PARTITION_KEY = process.env.PARTITION_KEY || "id";
 const SORT_KEY = process.env.SORT_KEY || "file_key";
 
 const s3 = new AWS.S3({

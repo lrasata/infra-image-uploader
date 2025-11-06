@@ -13,6 +13,4 @@ module "file_uploader" {
   use_bucketav                                  = var.use_bucketav
   bucketav_sns_findings_topic_name              = var.bucketav_sns_findings_topic_name
   lambda_memory_size_mb                         = var.lambda_memory_size_mb
-  dynamodb_partition_key                        = var.dynamodb_partition_key
-  dynamodb_sort_key                             = var.dynamodb_sort_key
 }

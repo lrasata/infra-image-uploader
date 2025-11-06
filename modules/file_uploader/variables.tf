@@ -60,15 +60,3 @@ variable "lambda_process_uploaded_file_dir" {
   description = "Path to built Lambda directory, including node_modules"
   type        = string
 }
-
-variable "dynamodb_partition_key" {
-  description = "DynamoDB partition key"
-  type        = string
-  default     = "user_id"
-}
-
-variable "dynamodb_sort_key" {
-  description = "DynamoDB sort key"
-  type        = string
-  default     = "file_key"
-}
