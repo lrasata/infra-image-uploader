@@ -1,18 +1,18 @@
 # How to build `sharp`
 
-`sharp` is used in the Lambda function which process files after they are uploaded in S3 bucket. It is use to generate thumbnail of uplaoded images.
+`sharp` is used in the Lambda function which process files after they are uploaded in S3 bucket. It is use to generate thumbnail of uplaoded files.
 
-See in folder: `modules\image_uploader\lambda_process_uploaded_file\processUploadedFile.js`
+See in folder: `modules\file_uploader\lambda_process_uploaded_file\processUploadedFile.js`
 
 ## On Linux or MacOS
 
 Please refer to [the official documentation](https://www.npmjs.com/package/sharp)
 
-Execute commands locally in the folder : `cd \modules\image_uploader\lambda_process_uploaded_file`
+Execute commands locally in the folder : `cd \modules\file_uploader\lambda_process_uploaded_file`
 
 ## On Windows
 
-Execute  the following commands locally in the folder : `cd infra-image-uploader\modules\image_uploader\lambda_process_uploaded_file`
+Execute  the following commands locally in the folder : `cd infra-file-uploader\modules\file_uploader\lambda_process_uploaded_file`
 
 ### Run an Amazon Linux container
 

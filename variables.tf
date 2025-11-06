@@ -27,10 +27,10 @@ variable "backend_certificate_arn" {
   type        = string
 }
 
-variable "api_image_upload_domain_name" {
-  description = "The domain name for the API to get pre-signed image upload URLs"
+variable "api_file_upload_domain_name" {
+  description = "The domain name for the API to get pre-signed file upload URLs"
   type        = string
-  default     = "api-image-upload.epic-trip-planner.com"
+  default     = "api-file-upload.epic-trip-planner.com"
 }
 
 variable "lambda_upload_presigned_url_expiration_time_s" {

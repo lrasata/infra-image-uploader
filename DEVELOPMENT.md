@@ -5,8 +5,8 @@
 - **Terraform** >= 1.3 installed: https://www.terraform.io/downloads.html
 - Access to **AWS configured**
 - **Secret values** are configured saved in Secrets Manager:
-  - secrets : `${var.environment}/image-upload/secrets`
-    - API_GW_AUTH_SECRET : Secret value of header X-Custom-Auth which allows client to request presigned url to upload images.
+  - secrets : `${var.environment}/file-upload/secrets`
+    - API_GW_AUTH_SECRET : Secret value of header X-Custom-Auth which allows client to request presigned url to upload files.
 - Build `sharp` and `aws-sdk` for Lambda function `process-uploaded-file-lambda`
   - Refer to [HOW_TO](HOW_TO.md) section
 - **Important:**
@@ -21,8 +21,8 @@
 **1. Clone the repository:**
 
 ```bash
-git clone https://github.com/lrasata/infra-image-uploader.git
-cd infra-image-uploader
+git clone https://github.com/lrasata/infra-file-uploader.git
+cd infra-file-uploader
 ```
 
 **2. Initialize Terraform:**
@@ -54,7 +54,7 @@ This project uses .tfvars files to handle multiple environments (e.g., dev, stag
 region      = "eu-central-1"
 environment = "staging"
 
-api_image_upload_domain_name = "staging-api-image-upload.epic-trip-planner.com"
+api_file_upload_domain_name = "staging-api-file-upload.epic-trip-planner.com"
 backend_certificate_arn      =
 
 uploads_bucket_name          = "trip-planner-app-uploads-bucket"
@@ -77,11 +77,11 @@ terraform apply -var-file="staging.tfvars"
 
 ## Usage 
 
-Use the specified API Gateway endpoint to request a presigned URL to upload an image.
+Use the specified API Gateway endpoint to request a presigned URL to upload a file.
 
 ````text
 # Endpoint that returns the presigned URL
-presign_endpoint =  "https://${api_image_upload_domain_name}/upload-url"
+presign_endpoint =  "https://${api_file_upload_domain_name}/upload-url"
 ````
 
 Specify the secret value of the header `x-api-gateway-img-upload-auth`

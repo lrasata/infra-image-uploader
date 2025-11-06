@@ -72,7 +72,7 @@ resource "aws_iam_policy" "lambda_upload_policy" {
           "secretsmanager:GetSecretValue"
         ]
         Effect   = "Allow"
-        Resource = data.aws_secretsmanager_secret.image_upload_secrets.arn
+        Resource = data.aws_secretsmanager_secret.file_upload_secrets.arn
       }
     ]
   })

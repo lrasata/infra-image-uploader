@@ -51,6 +51,7 @@ exports.handler = async (event) => {
         const filename = keyParts[keyParts.length - 1];
 
         // Download original image
+        // TODO do not process if file is PDF
         const originalObject = await S3.getObject({ Bucket: bucket, Key: fileKey }).promise();
         const originalBuffer = originalObject.Body;
 

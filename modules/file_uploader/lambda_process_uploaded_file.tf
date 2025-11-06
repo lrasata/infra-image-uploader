@@ -1,9 +1,9 @@
 data "archive_file" "lambda_process_uploaded_file_zip" {
-  type       = "zip"
-  source_dir = var.lambda_process_uploaded_file_dir
+  type        = "zip"
+  source_dir  = var.lambda_process_uploaded_file_dir
   output_path = "${path.module}/lambda_process_uploaded_file.zip"
 
-  excludes   = ["node_modules/.bin/*"]
+  excludes = ["node_modules/.bin/*"]
 }
 
 resource "aws_iam_role" "lambda_process_uploaded_file_exec_role" {
@@ -31,7 +31,7 @@ resource "aws_lambda_function" "process_uploaded_file" {
 
   role = aws_iam_role.lambda_process_uploaded_file_exec_role.arn
 
-  timeout     = 30  # seconds
+  timeout     = 30                        # seconds
   memory_size = var.lambda_memory_size_mb # more memory = faster processing - depending on the max size of the upload file, this can be adjusted
 
   environment {
@@ -40,8 +40,8 @@ resource "aws_lambda_function" "process_uploaded_file" {
       UPLOAD_FOLDER     = local.UPLOAD_FOLDER
       THUMBNAIL_FOLDER  = local.THUMBNAIL_FOLDER
       DYNAMO_TABLE      = aws_dynamodb_table.files_metadata_table.name
-      PARTITION_KEY      = var.dynamodb_partition_key
-      SORT_KEY           = var.dynamodb_sort_key
+      PARTITION_KEY     = var.dynamodb_partition_key
+      SORT_KEY          = var.dynamodb_sort_key
     }
   }
 }
@@ -54,8 +54,8 @@ resource "aws_iam_policy" "gt_s3_access_policy" {
     Version = "2012-10-17"
     Statement = [
       {
-        Effect   = "Allow",
-        Action   = [
+        Effect = "Allow",
+        Action = [
           "dynamodb:Query",
           "dynamodb:PutItem",
           "dynamodb:UpdateItem"
