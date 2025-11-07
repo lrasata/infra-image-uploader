@@ -1,11 +1,11 @@
-module "image_uploader" {
-  source = "./modules/image_uploader"
+module "file_uploader" {
+  source = "./modules/file_uploader"
 
-  lambda_process_uploaded_file_dir = "./modules/image_uploader/lambda_process_uploaded_file"
+  lambda_process_uploaded_file_dir = "./modules/file_uploader/lambda_process_uploaded_file"
 
   region                                        = var.region
   environment                                   = var.environment
-  api_image_upload_domain_name                  = var.api_image_upload_domain_name
+  api_file_upload_domain_name                   = var.api_file_upload_domain_name
   backend_certificate_arn                       = var.backend_certificate_arn
   uploads_bucket_name                           = var.uploads_bucket_name
   enable_transfer_acceleration                  = var.enable_transfer_acceleration
@@ -13,6 +13,4 @@ module "image_uploader" {
   use_bucketav                                  = var.use_bucketav
   bucketav_sns_findings_topic_name              = var.bucketav_sns_findings_topic_name
   lambda_memory_size_mb                         = var.lambda_memory_size_mb
-  dynamodb_partition_key                        = var.dynamodb_partition_key
-  dynamodb_sort_key                             = var.dynamodb_sort_key
 }

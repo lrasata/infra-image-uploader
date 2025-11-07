@@ -27,10 +27,10 @@ variable "backend_certificate_arn" {
   type        = string
 }
 
-variable "api_image_upload_domain_name" {
-  description = "The domain name for the API to get pre-signed image upload URLs"
+variable "api_file_upload_domain_name" {
+  description = "The domain name for the API to get pre-signed file upload URLs"
   type        = string
-  default     = "api-image-upload.epic-trip-planner.com"
+  default     = "api-file-upload.epic-trip-planner.com"
 }
 
 variable "lambda_upload_presigned_url_expiration_time_s" {
@@ -52,23 +52,11 @@ variable "bucketav_sns_findings_topic_name" {
 
 variable "lambda_memory_size_mb" {
   description = "Memory size in MB value for Lambda processing file which allow faster execution"
-  type = number
-  default = 512
+  type        = number
+  default     = 512
 }
 
 variable "lambda_process_uploaded_file_dir" {
   description = "Path to built Lambda directory, including node_modules"
   type        = string
-}
-
-variable "dynamodb_partition_key" {
-  description = "DynamoDB partition key"
-  type        = string
-  default     = "user_id"
-}
-
-variable "dynamodb_sort_key" {
-  description = "DynamoDB sort key"
-  type        = string
-  default     = "file_key"
 }

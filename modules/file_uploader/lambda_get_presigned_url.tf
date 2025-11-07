@@ -47,8 +47,8 @@ resource "aws_lambda_function" "get_presigned_url" {
       API_GW_AUTH_SECRET = local.auth_secret
       UPLOAD_FOLDER      = local.UPLOAD_FOLDER
       USE_S3_ACCEL       = var.enable_transfer_acceleration
-      PARTITION_KEY      = var.dynamodb_partition_key
-      SORT_KEY           = var.dynamodb_sort_key
+      PARTITION_KEY      = local.partition_key
+      SORT_KEY           = local.sort_key
     }
   }
 
@@ -72,7 +72,7 @@ resource "aws_iam_policy" "lambda_upload_policy" {
           "secretsmanager:GetSecretValue"
         ]
         Effect   = "Allow"
-        Resource = data.aws_secretsmanager_secret.image_upload_secrets.arn
+        Resource = data.aws_secretsmanager_secret.file_upload_secrets.arn
       }
     ]
   })

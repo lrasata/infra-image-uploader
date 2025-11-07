@@ -1,5 +1,5 @@
 resource "aws_wafv2_web_acl" "api_gw_waf" {
-  name        = "${var.environment}-image-uploader-api-gw-waf"
+  name        = "${var.environment}-file-uploader-api-gw-waf"
   description = "WAF for API Gateway"
   scope       = "REGIONAL"
 
@@ -9,7 +9,7 @@ resource "aws_wafv2_web_acl" "api_gw_waf" {
 
   visibility_config {
     cloudwatch_metrics_enabled = true
-    metric_name                = "${var.environment}-imageUploaderApiGwWAF"
+    metric_name                = "${var.environment}-fileUploaderApiGwWAF"
     sampled_requests_enabled   = true
   }
 

@@ -3,7 +3,7 @@ resource "aws_api_gateway_rest_api" "api" {
   description = "API Gateway for requesting pre-signed url"
 }
 
-resource "aws_api_gateway_resource" "image_upload_url_resource" {
+resource "aws_api_gateway_resource" "file_upload_url_resource" {
   rest_api_id = aws_api_gateway_rest_api.api.id
   parent_id   = aws_api_gateway_rest_api.api.root_resource_id
   path_part   = "upload-url"
@@ -12,14 +12,14 @@ resource "aws_api_gateway_resource" "image_upload_url_resource" {
 # OPTIONS method with CORS headers
 resource "aws_api_gateway_method" "options_method" {
   rest_api_id   = aws_api_gateway_rest_api.api.id
-  resource_id   = aws_api_gateway_resource.image_upload_url_resource.id
+  resource_id   = aws_api_gateway_resource.file_upload_url_resource.id
   http_method   = "OPTIONS"
   authorization = "NONE"
 }
 
 resource "aws_api_gateway_integration" "options_integration" {
   rest_api_id = aws_api_gateway_rest_api.api.id
-  resource_id = aws_api_gateway_resource.image_upload_url_resource.id
+  resource_id = aws_api_gateway_resource.file_upload_url_resource.id
   http_method = aws_api_gateway_method.options_method.http_method
   type        = "MOCK"
 
@@ -30,7 +30,7 @@ resource "aws_api_gateway_integration" "options_integration" {
 
 resource "aws_api_gateway_method_response" "options_response" {
   rest_api_id = aws_api_gateway_rest_api.api.id
-  resource_id = aws_api_gateway_resource.image_upload_url_resource.id
+  resource_id = aws_api_gateway_resource.file_upload_url_resource.id
   http_method = aws_api_gateway_method.options_method.http_method
   status_code = "200"
 
@@ -47,7 +47,7 @@ resource "aws_api_gateway_method_response" "options_response" {
 
 resource "aws_api_gateway_integration_response" "options_integration_response" {
   rest_api_id = aws_api_gateway_rest_api.api.id
-  resource_id = aws_api_gateway_resource.image_upload_url_resource.id
+  resource_id = aws_api_gateway_resource.file_upload_url_resource.id
   http_method = aws_api_gateway_method.options_method.http_method
   status_code = aws_api_gateway_method_response.options_response.status_code
 
@@ -60,18 +60,18 @@ resource "aws_api_gateway_integration_response" "options_integration_response" {
 
 resource "aws_api_gateway_method" "get_method" {
   rest_api_id   = aws_api_gateway_rest_api.api.id
-  resource_id   = aws_api_gateway_resource.image_upload_url_resource.id
+  resource_id   = aws_api_gateway_resource.file_upload_url_resource.id
   http_method   = "GET"
   authorization = "NONE" # NB: this allows public access
 
-  request_parameters = {     
+  request_parameters = {
     "method.request.header.x-api-gateway-img-upload-auth" = true
   }
 }
 
 resource "aws_api_gateway_integration" "lambda_integration" {
   rest_api_id = aws_api_gateway_rest_api.api.id
-  resource_id = aws_api_gateway_resource.image_upload_url_resource.id
+  resource_id = aws_api_gateway_resource.file_upload_url_resource.id
   http_method = aws_api_gateway_method.get_method.http_method
   # Proxy integration : API Gateway forwards the entire HTTP request (headers, path, query string, body, etc.) directly to your backend Lambda function as-is
   type = "AWS_PROXY"
@@ -123,7 +123,7 @@ resource "aws_api_gateway_stage" "api_gateway_stage" {
 
 # Create a custom domain for API Gateway
 resource "aws_api_gateway_domain_name" "api" {
-  domain_name              = var.api_image_upload_domain_name
+  domain_name              = var.api_file_upload_domain_name
   regional_certificate_arn = var.backend_certificate_arn
   endpoint_configuration {
     types = ["REGIONAL"]

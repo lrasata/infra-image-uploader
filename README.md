@@ -1,8 +1,8 @@
-# Image uploader infrastructure - managed with Terraform on AWS
+# File uploader infrastructure - managed with Terraform on AWS
 
 ## Overview
 
-This project provides a **Terraform module** that allows clients to upload images securely to AWS.
+This project provides a **Terraform module** that allows clients to upload files securely to AWS.
 It supports **optional malware scanning via BucketAV**, thumbnail generation, and user metadata storage in DynamoDB.
 This infrastrcture is a **100% serveless**.
 
@@ -19,19 +19,19 @@ This infrastrcture is a **100% serveless**.
 5. Thumbnail is stored in a dedicated S3 folder `thumbnails/`, and metadata (file key, thumbnail key, user ID, etc.) is recorded in **DynamoDB**.
 
 
-<img src="docs/upload-image-infra.png" alt="image-uploader-infrastructure">
+<img src="docs/upload-file-infra.png" alt="file-uploader-infrastructure">
 
 ## Usage
 
 Use in a terraform project by importing the module:
 
 ```text
-module "image_uploader" {
-  source = "git::https://github.com/lrasata/infra-image-uploader.git//modules/image_uploader?ref=v1.0.0"
+module "file_uploader" {
+  source = "git::https://github.com/lrasata/infra-file-uploader.git//modules/file_uploader?ref=v1.0.0"
 
   region                                        = var.region
   environment                                   = var.environment
-  api_image_upload_domain_name                  = var.api_image_upload_domain_name
+  api_file_upload_domain_name                  = var.api_file_upload_domain_name
   backend_certificate_arn                       = var.backend_certificate_arn
   uploads_bucket_name                           = var.uploads_bucket_name
   enable_transfer_acceleration                  = var.enable_transfer_acceleration
@@ -69,10 +69,10 @@ output "uploads_bucket_regional_domain_name" {
 }
 
 Usage : 
-origin_bucket_arn = module.image_uploader.uploads_bucket_arn
+origin_bucket_arn = module.file_uploader.uploads_bucket_arn
 ````
 
-> FYI: Currently testing the integration of `image-uploader` within the infrascture of a full-stack web application: [trip-planner-web-app](https://github.com/lrasata/infra-trip-planner-webapp)
+> FYI: Currently testing the integration of `file-uploader` within the infrascture of a full-stack web application: [trip-planner-web-app](https://github.com/lrasata/infra-trip-planner-webapp)
 
 ## Key attributes
 
@@ -111,7 +111,7 @@ Using S3 for file storage is a standard practice, but for metadata storage we ch
 
 - **Serverless alignment**: DynamoDB integrates naturally with the rest of the serverless stack (S3 + Lambda + API Gateway), ensuring consistent scalability and availability without managing servers.
 - **Scalability & performance**: DynamoDB scales automatically with unpredictable upload traffic, delivering single-digit millisecond latency for lookups.
-- **Fit for the use case**: The image uploader only requires simple, fast lookups (e.g., get file key or thumbnail URL by user). This doesn’t require complex relational queries, making DynamoDB the most efficient choice.
+- **Fit for the use case**: The file uploader only requires simple, fast lookups (e.g., get file key or thumbnail URL by user). This doesn’t require complex relational queries, making DynamoDB the most efficient choice.
 
 ### Why BucketAV (or other proprietary AV) instead of using ClamAV (open-source) in Lambda
 

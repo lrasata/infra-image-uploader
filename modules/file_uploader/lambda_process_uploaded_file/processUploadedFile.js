@@ -3,7 +3,7 @@ const S3 = new AWS.S3();
 const DynamoDB = new AWS.DynamoDB.DocumentClient();
 const sharp = require('sharp');
 
-const PARTITION_KEY = process.env.PARTITION_KEY || "user_id";
+const PARTITION_KEY = process.env.PARTITION_KEY || "id";
 const SORT_KEY = process.env.SORT_KEY || "file_key";
 
 exports.handler = async (event) => {
@@ -51,24 +51,30 @@ exports.handler = async (event) => {
         const filename = keyParts[keyParts.length - 1];
 
         // Download original image
-        const originalObject = await S3.getObject({ Bucket: bucket, Key: fileKey }).promise();
-        const originalBuffer = originalObject.Body;
+        const { ContentType, Body} = await S3.getObject({ Bucket: bucket, Key: fileKey }).promise();
 
-        // Resize image to 200x200 thumbnail
-        const thumbnailBuffer = await sharp(originalBuffer)
-            .resize(200, 200)
-            .toBuffer();
+        let thumbKey = null;
+        if (ContentType && ContentType.startsWith('image/')) {
+            console.log(`Image File detected: ${ContentType}. Generating thumbnail.`);
 
-        // Define thumbnail key
-        const thumbKey = `${process.env.THUMBNAIL_FOLDER}${apiResource}/${partitionKey}/${filename}`;
+            // Resize image to 200x200 thumbnail
+            const thumbnailBuffer = await sharp(Body)
+                .resize(200, 200)
+                .toBuffer();
 
-        // Upload thumbnail back to S3
-        await S3.putObject({
-            Bucket: bucket,
-            Key: thumbKey,
-            Body: thumbnailBuffer,
-            ContentType: originalObject.ContentType
-        }).promise();
+            // Define thumbnail key
+            thumbKey = `${process.env.THUMBNAIL_FOLDER}${apiResource}/${partitionKey}/${filename}`;
+
+            // Upload thumbnail back to S3
+            await S3.putObject({
+                Bucket: bucket,
+                Key: thumbKey,
+                Body: thumbnailBuffer,
+                ContentType: ContentType
+            }).promise();
+        } else {
+            console.log('Not an image — skipping image thumbnail generation.');
+        }
 
         const tableName = process.env.DYNAMO_TABLE;
 
@@ -79,7 +85,7 @@ exports.handler = async (event) => {
             KeyConditionExpression: "#pk = :pk",
             FilterExpression: "selected = :trueVal",
             ExpressionAttributeNames: { "#pk": PARTITION_KEY },
-            ExpressionAttributeValues: { ":pk": partitionKey, ":trueVal": true }
+            ExpressionAttributeValues: { ":pk": filename, ":trueVal": true }
         }).promise();
 
         const transactItems = [];
