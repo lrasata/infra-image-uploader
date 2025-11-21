@@ -1,5 +1,5 @@
 data "aws_secretsmanager_secret" "file_upload_secrets" {
-  name = "${var.environment}/file-upload/secrets"
+  name = var.secret_store_name
 }
 
 data "aws_secretsmanager_secret_version" "file_upload_secrets_value" {

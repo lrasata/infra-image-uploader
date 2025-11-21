@@ -10,6 +10,11 @@ variable "uploads_bucket_name" {
   default     = "uploads-bucket"
 }
 
+variable "secret_store_name" {
+  description = "Name of the secret store where API_GW_AUTH_SECRET value can be fetched"
+  type        = string
+}
+
 variable "enable_transfer_acceleration" {
   type        = bool
   description = "Enable S3 Transfer Acceleration?"

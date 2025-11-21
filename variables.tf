@@ -56,14 +56,7 @@ variable "lambda_memory_size_mb" {
   default     = 512
 }
 
-variable "dynamodb_partition_key" {
-  description = "DynamoDB partition key"
+variable "secret_store_name" {
+  description = "Name of the secret store where API_GW_AUTH_SECRET value can be fetched"
   type        = string
-  default     = "user_id"
-}
-
-variable "dynamodb_sort_key" {
-  description = "DynamoDB sort key"
-  type        = string
-  default     = "file_key"
 }
