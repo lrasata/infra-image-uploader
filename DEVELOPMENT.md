@@ -6,7 +6,7 @@
 - Access to **AWS configured**
 - **Secret values** are configured saved in Secrets Manager:
   - secrets : `${var.environment}/file-upload/secrets`
-    - API_GW_AUTH_SECRET : Secret value of header `x-api-gateway-img-upload-auth` which allows client to request presigned url to upload files.
+    - API_GW_AUTH_SECRET : Secret value of header `x-api-gateway-file-upload-auth` which allows client to request presigned url to upload files.
 - Build `sharp` and `aws-sdk` for Lambda function `process-uploaded-file-lambda`
   - Refer to [HOW_TO](HOW_TO.md) section
 - **Important:**
@@ -84,12 +84,12 @@ Use the specified API Gateway endpoint to request a presigned URL to upload a fi
 presign_endpoint =  "https://${api_file_upload_domain_name}/upload-url"
 ````
 
-Specify the secret value of the header `x-api-gateway-img-upload-auth`
+Specify the secret value of the header `x-api-gateway-file-upload-auth`
 
 ````text
 # Custom auth header required by your Lambda
 headers = {
-    "x-api-gateway-img-upload-auth": "secret"
+    "x-api-gateway-file-upload-auth": "secret"
 }
 ````
 

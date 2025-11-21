@@ -31,7 +31,8 @@ module "file_uploader" {
 
   region                                        = var.region
   environment                                   = var.environment
-  api_file_upload_domain_name                  = var.api_file_upload_domain_name
+  api_file_upload_domain_name                   = var.api_file_upload_domain_name
+  secret_store_name                             = var.secret_store_name
   backend_certificate_arn                       = var.backend_certificate_arn
   uploads_bucket_name                           = var.uploads_bucket_name
   enable_transfer_acceleration                  = var.enable_transfer_acceleration
@@ -107,7 +108,7 @@ origin_bucket_arn = module.file_uploader.uploads_bucket_arn
 
 ### Why use DynamoDB instead of RDS
 
-Using S3 for file storage is a standard practice, but for metadata storage we chose DynamoDB over a relational database (RDS).
+Using S3 for file storage is a standard practice, but for metadata storage I chose DynamoDB over a relational database (RDS).
 
 - **Serverless alignment**: DynamoDB integrates naturally with the rest of the serverless stack (S3 + Lambda + API Gateway), ensuring consistent scalability and availability without managing servers.
 - **Scalability & performance**: DynamoDB scales automatically with unpredictable upload traffic, delivering single-digit millisecond latency for lookups.
