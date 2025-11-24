@@ -72,10 +72,10 @@ module "waf" {
 module "route53" {
   source = "./submodules/route53"
 
-  environment                 = var.environment
-  api_file_upload_domain_name = var.api_file_upload_domain_name
-  api_gateway_domain_name     = module.api_gateway.api_gateway_domain_name
-  api_gateway_zone_id         = module.api_gateway.api_gateway_zone_id
+  api_file_upload_domain_name      = var.api_file_upload_domain_name
+  api_gateway_regional_domain_name = module.api_gateway.api_gateway_domain_name_regional_domain_name
+  api_gateway_regional_zone_id     = module.api_gateway.api_gateway_domain_name_regional_zone_id
+  route53_zone_name                = var.route53_zone_name
 }
 
 # Optional: Antivirus submodule (conditional based on use_bucketav)

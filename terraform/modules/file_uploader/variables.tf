@@ -4,6 +4,11 @@ variable "region" {
   default     = "eu-central-1"
 }
 
+variable "route53_zone_name" {
+  description = "Route 53 zone name (e.g., epic-trip-planner.com)"
+  type        = string
+}
+
 variable "uploads_bucket_name" {
   description = "The name of the S3 bucket for file uploads"
   type        = string
