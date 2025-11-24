@@ -18,7 +18,6 @@ module "dynamodb" {
 module "secrets" {
   source = "./submodules/secrets"
 
-  environment          = var.environment
   secret_store_name    = var.secret_store_name
 }
 
@@ -34,15 +33,15 @@ module "lambda_functions" {
   # Dependencies from other modules
   uploads_bucket_id              = module.s3_buckets.uploads_bucket_id
   uploads_bucket_arn             = module.s3_buckets.uploads_bucket_arn
-  thumbnails_bucket_id           = module.s3_buckets.thumbnails_bucket_id
-  thumbnails_bucket_arn          = module.s3_buckets.thumbnails_bucket_arn
-  dynamodb_table_name            = module.dynamodb.metadata_table_name
-  dynamodb_table_arn             = module.dynamodb.metadata_table_arn
-  secrets_manager_secret_arn     = module.secrets.secret_arn
+  dynamodb_table_name            = module.dynamodb.files_metadata_table_name
+  dynamodb_table_arn             = module.dynamodb.files_metadata_table_arn
+  dynamodb_partition_key = module.dynamodb.partition_key
+  dynamodb_sort_key = module.dynamodb.sort_key
+  secret_arn     = module.secrets.secret_arn
+
 
   # BucketAV integration
   use_bucketav                   = var.use_bucketav
-  bucketav_sns_findings_topic_arn = var.use_bucketav ? module.antivirus[0].sns_topic_arn : null
 }
 
 # Call the WAF submodule

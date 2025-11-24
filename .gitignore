@@ -29,6 +29,6 @@ override.tf.json
 .env
 dist
 modules/**/*.zip
-src/lambdas/get_presigned_url/node_modules
-src/lambdas/process_uploaded_file/node_modules
+terraform/modules/file_uploader/submodules/lambda_functions/src/lambdas/get_presigned_url/node_modules
+terraform/modules/file_uploader/submodules/lambda_functions/src/lambdas/process_uploaded_file/node_modules
 test_scripts
