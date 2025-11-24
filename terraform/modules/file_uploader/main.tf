@@ -31,17 +31,18 @@ module "lambda_functions" {
   lambda_upload_presigned_url_expiration_time_s = var.lambda_upload_presigned_url_expiration_time_s
 
   # Dependencies from other modules
-  uploads_bucket_id      = module.s3_buckets.uploads_bucket_id
-  uploads_bucket_arn     = module.s3_buckets.uploads_bucket_arn
-  dynamodb_table_name    = module.dynamodb.files_metadata_table_name
-  dynamodb_table_arn     = module.dynamodb.files_metadata_table_arn
-  dynamodb_partition_key = module.dynamodb.partition_key
-  dynamodb_sort_key      = module.dynamodb.sort_key
-  secret_arn             = module.secrets.secret_arn
+  uploads_bucket_id                = module.s3_buckets.uploads_bucket_id
+  uploads_bucket_arn               = module.s3_buckets.uploads_bucket_arn
+  dynamodb_table_name              = module.dynamodb.files_metadata_table_name
+  dynamodb_table_arn               = module.dynamodb.files_metadata_table_arn
+  dynamodb_partition_key           = module.dynamodb.partition_key
+  dynamodb_sort_key                = module.dynamodb.sort_key
+  secret_arn                       = module.secrets.secret_arn
+  lambda_process_uploaded_file_dir = var.lambda_process_uploaded_file_dir
 
 
   # BucketAV integration
-  use_bucketav                 = var.use_bucketav
+  use_bucketav                 = var.use_bucket_av
   auth_secret                  = module.secrets.auth_secret
   enable_transfer_acceleration = var.enable_transfer_acceleration
 }
@@ -80,14 +81,14 @@ module "route53" {
 
 # Optional: Antivirus submodule (conditional based on use_bucketav)
 module "antivirus" {
-  count  = var.use_bucketav ? 1 : 0
+  count  = var.use_bucket_av ? 1 : 0
   source = "./submodules/antivirus"
 
-  bucketav_sns_findings_topic_name           = var.bucketav_sns_findings_topic_name
+  bucketav_sns_findings_topic_name           = var.bucket_av_sns_findings_topic_name
   uploads_bucket_id                          = module.s3_buckets.uploads_bucket_id
   process_uploaded_file_lambda_arn           = module.lambda_functions.process_uploaded_file_function_arn
   process_uploaded_file_lambda_function_name = module.lambda_functions.process_uploaded_file_function_name
-  upload_folder                              = ""
+  upload_folder                              = module.lambda_functions.upload_folder
   uploads_bucket_arn                         = module.s3_buckets.uploads_bucket_arn
-  use_bucketav                               = var.use_bucketav
+  use_bucketav                               = var.use_bucket_av
 }

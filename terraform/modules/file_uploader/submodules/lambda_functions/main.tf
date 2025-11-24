@@ -100,8 +100,10 @@ resource "aws_iam_role_policy_attachment" "lambda_upload_logging" {
 # ============================================================================
 
 data "archive_file" "lambda_process_uploaded_file_zip" {
-  type        = "zip"
-  source_dir  = "${path.module}/../../src/lambdas/process_uploaded_file"
+  type = "zip"
+  # source_dir  = "${path.module}/src/lambdas/process_uploaded_file"
+  # TODO this should be replaced with local-exec provisioner but executed on CI/CD pipeline
+  source_dir  = var.lambda_process_uploaded_file_dir
   output_path = "${path.module}/lambda_process_uploaded_file.zip"
 
   excludes = ["node_modules/.bin/*"]

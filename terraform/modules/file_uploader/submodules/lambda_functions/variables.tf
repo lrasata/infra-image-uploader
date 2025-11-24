@@ -68,3 +68,8 @@ variable "dynamodb_sort_key" {
   description = "Sort key name for the DynamoDB table"
   type        = string
 }
+
+variable "lambda_process_uploaded_file_dir" {
+  description = "Path to built Lambda directory, including node_modules"
+  type        = string
+}

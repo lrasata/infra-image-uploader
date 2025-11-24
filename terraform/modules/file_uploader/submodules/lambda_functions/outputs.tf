@@ -17,3 +17,8 @@ output "process_uploaded_file_function_arn" {
   description = "ARN of the process uploaded file Lambda function"
   value       = aws_lambda_function.process_uploaded_file.arn
 }
+
+output "upload_folder" {
+  description = "Folder name in s3 bucket where files are uploaded"
+  value       = local.upload_folder
+}
