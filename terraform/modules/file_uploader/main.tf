@@ -42,13 +42,8 @@ module "lambda_functions" {
 
   # BucketAV integration
   use_bucketav                   = var.use_bucketav
-}
-
-# Call the WAF submodule
-module "waf" {
-  source = "./submodules/waf"
-
-  environment = var.environment
+  auth_secret                    = module.secrets.auth_secret
+  enable_transfer_acceleration   = var.enable_transfer_acceleration
 }
 
 # Call the API Gateway submodule
@@ -56,15 +51,21 @@ module "api_gateway" {
   source = "./submodules/api_gateway"
 
   environment                = var.environment
-  region                     = var.region
   api_file_upload_domain_name = var.api_file_upload_domain_name
+  backend_certificate_arn = var.backend_certificate_arn
 
   # Lambda integration
-  get_presigned_url_function_name  = module.lambda_functions.get_presigned_url_function_name
-  get_presigned_url_function_arn   = module.lambda_functions.get_presigned_url_function_arn
+  get_presigned_url_lambda_function_name  = module.lambda_functions.get_presigned_url_function_name
+  get_presigned_url_lambda_arn   = module.lambda_functions.get_presigned_url_function_arn
 
-  # WAF integration
-  waf_web_acl_arn = module.waf.web_acl_arn
+}
+
+# Call the WAF submodule
+module "waf" {
+  source = "./submodules/waf"
+
+  environment = var.environment
+  api_gateway_stage_arn = module.api_gateway.api_gateway_stage_arn
 }
 
 # Call the Route53 submodule (if DNS is managed)

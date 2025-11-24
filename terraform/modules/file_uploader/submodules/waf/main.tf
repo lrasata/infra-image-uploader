@@ -62,6 +62,6 @@ resource "aws_wafv2_web_acl" "api_gw_waf" {
 
 # Associate the WAF with API Gateway stage
 resource "aws_wafv2_web_acl_association" "api_gw_assoc" {
-  resource_arn = aws_api_gateway_stage.api_gateway_stage.arn
+  resource_arn = var.api_gateway_stage_arn
   web_acl_arn  = aws_wafv2_web_acl.api_gw_waf.arn
 }

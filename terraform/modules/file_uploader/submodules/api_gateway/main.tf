@@ -14,7 +14,7 @@ resource "aws_api_gateway_method" "options_method" {
   rest_api_id   = aws_api_gateway_rest_api.api.id
   resource_id   = aws_api_gateway_resource.file_upload_url_resource.id
   http_method   = "OPTIONS"
-  authorization = "NONE"
+  authorization = "NONE" # NB: this allows public access
 }
 
 resource "aws_api_gateway_integration" "options_integration" {
@@ -62,7 +62,7 @@ resource "aws_api_gateway_method" "get_method" {
   rest_api_id   = aws_api_gateway_rest_api.api.id
   resource_id   = aws_api_gateway_resource.file_upload_url_resource.id
   http_method   = "GET"
-  authorization = "NONE" # NB: this allows public access
+  authorization = "NONE"
 
   request_parameters = {
     "method.request.header.x-api-gateway-file-upload-auth" = true
@@ -77,22 +77,18 @@ resource "aws_api_gateway_integration" "lambda_integration" {
   type = "AWS_PROXY"
   # even though API method is GET, when using AWS_PROXY the integration must always be "POST"
   integration_http_method = "POST"
-  uri                     = aws_lambda_function.get_presigned_url.invoke_arn
+  uri                     = var.get_presigned_url_lambda_arn
 }
 
 resource "aws_lambda_permission" "apigw_permission" {
   statement_id  = "AllowAPIGatewayInvoke"
   action        = "lambda:InvokeFunction"
-  function_name = aws_lambda_function.get_presigned_url.function_name
+  function_name = var.get_presigned_url_lambda_function_name
   principal     = "apigateway.amazonaws.com"
   source_arn    = "${aws_api_gateway_rest_api.api.execution_arn}/*/*"
-
-  depends_on = [aws_lambda_function.get_presigned_url]
 }
 
-# Every time there is a change in methods/resources, Terraform may not automatically create a new deployment unless “forced” with triggers.
 resource "aws_api_gateway_deployment" "deployment" {
-
   rest_api_id = aws_api_gateway_rest_api.api.id
 
   triggers = {
@@ -121,7 +117,6 @@ resource "aws_api_gateway_stage" "api_gateway_stage" {
   stage_name    = var.environment
 }
 
-# Create a custom domain for API Gateway
 resource "aws_api_gateway_domain_name" "api" {
   domain_name              = var.api_file_upload_domain_name
   regional_certificate_arn = var.backend_certificate_arn
@@ -137,15 +132,3 @@ resource "aws_api_gateway_base_path_mapping" "api_mapping" {
   base_path   = "" # empty string means root path
 }
 
-# Create Route 53 alias record to point to API Gateway
-resource "aws_route53_record" "api" {
-  zone_id = data.aws_route53_zone.main.zone_id
-  name    = aws_api_gateway_domain_name.api.domain_name
-  type    = "A"
-
-  alias {
-    name                   = aws_api_gateway_domain_name.api.regional_domain_name
-    zone_id                = aws_api_gateway_domain_name.api.regional_zone_id
-    evaluate_target_health = false
-  }
-}
