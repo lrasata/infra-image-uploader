@@ -2,9 +2,9 @@
 module "s3_buckets" {
   source = "./submodules/s3_buckets"
 
-  environment                   = var.environment
-  uploads_bucket_name           = var.uploads_bucket_name
-  enable_transfer_acceleration  = var.enable_transfer_acceleration
+  environment                  = var.environment
+  uploads_bucket_name          = var.uploads_bucket_name
+  enable_transfer_acceleration = var.enable_transfer_acceleration
 }
 
 # Call the DynamoDB submodule
@@ -18,7 +18,7 @@ module "dynamodb" {
 module "secrets" {
   source = "./submodules/secrets"
 
-  secret_store_name    = var.secret_store_name
+  secret_store_name = var.secret_store_name
 }
 
 # Call the Lambda Functions submodule
@@ -31,32 +31,32 @@ module "lambda_functions" {
   lambda_upload_presigned_url_expiration_time_s = var.lambda_upload_presigned_url_expiration_time_s
 
   # Dependencies from other modules
-  uploads_bucket_id              = module.s3_buckets.uploads_bucket_id
-  uploads_bucket_arn             = module.s3_buckets.uploads_bucket_arn
-  dynamodb_table_name            = module.dynamodb.files_metadata_table_name
-  dynamodb_table_arn             = module.dynamodb.files_metadata_table_arn
+  uploads_bucket_id      = module.s3_buckets.uploads_bucket_id
+  uploads_bucket_arn     = module.s3_buckets.uploads_bucket_arn
+  dynamodb_table_name    = module.dynamodb.files_metadata_table_name
+  dynamodb_table_arn     = module.dynamodb.files_metadata_table_arn
   dynamodb_partition_key = module.dynamodb.partition_key
-  dynamodb_sort_key = module.dynamodb.sort_key
-  secret_arn     = module.secrets.secret_arn
+  dynamodb_sort_key      = module.dynamodb.sort_key
+  secret_arn             = module.secrets.secret_arn
 
 
   # BucketAV integration
-  use_bucketav                   = var.use_bucketav
-  auth_secret                    = module.secrets.auth_secret
-  enable_transfer_acceleration   = var.enable_transfer_acceleration
+  use_bucketav                 = var.use_bucketav
+  auth_secret                  = module.secrets.auth_secret
+  enable_transfer_acceleration = var.enable_transfer_acceleration
 }
 
 # Call the API Gateway submodule
 module "api_gateway" {
   source = "./submodules/api_gateway"
 
-  environment                = var.environment
+  environment                 = var.environment
   api_file_upload_domain_name = var.api_file_upload_domain_name
-  backend_certificate_arn = var.backend_certificate_arn
+  backend_certificate_arn     = var.backend_certificate_arn
 
   # Lambda integration
-  get_presigned_url_lambda_function_name  = module.lambda_functions.get_presigned_url_function_name
-  get_presigned_url_lambda_arn   = module.lambda_functions.get_presigned_url_function_arn
+  get_presigned_url_lambda_function_name = module.lambda_functions.get_presigned_url_function_name
+  get_presigned_url_lambda_arn           = module.lambda_functions.get_presigned_url_function_arn
 
 }
 
@@ -64,7 +64,7 @@ module "api_gateway" {
 module "waf" {
   source = "./submodules/waf"
 
-  environment = var.environment
+  environment           = var.environment
   api_gateway_stage_arn = module.api_gateway.api_gateway_stage_arn
 }
 
@@ -83,7 +83,11 @@ module "antivirus" {
   count  = var.use_bucketav ? 1 : 0
   source = "./submodules/antivirus"
 
-  environment                    = var.environment
-  bucketav_sns_findings_topic_name = var.bucketav_sns_findings_topic_name
-  uploads_bucket_id              = module.s3_buckets.uploads_bucket_id
+  bucketav_sns_findings_topic_name           = var.bucketav_sns_findings_topic_name
+  uploads_bucket_id                          = module.s3_buckets.uploads_bucket_id
+  process_uploaded_file_lambda_arn           = module.lambda_functions.process_uploaded_file_function_arn
+  process_uploaded_file_lambda_function_name = module.lambda_functions.process_uploaded_file_function_name
+  upload_folder                              = ""
+  uploads_bucket_arn                         = module.s3_buckets.uploads_bucket_arn
+  use_bucketav                               = var.use_bucketav
 }
