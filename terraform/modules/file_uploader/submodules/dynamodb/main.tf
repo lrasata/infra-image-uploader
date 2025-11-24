@@ -2,6 +2,7 @@ locals {
   partition_key = "id"
   sort_key      = "file_key"
 }
+
 resource "aws_dynamodb_table" "files_metadata_table" {
   name         = "${var.environment}-files-metadata"
   billing_mode = "PAY_PER_REQUEST"

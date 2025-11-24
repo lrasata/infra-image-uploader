@@ -1,7 +1,7 @@
 module "file_uploader" {
-  source = "./modules/file_uploader"
+  source = "../../modules/file_uploader"
 
-  lambda_process_uploaded_file_dir = "./modules/file_uploader/lambda_process_uploaded_file"
+  lambda_process_uploaded_file_dir = "../../../src/lambdas/process_uploaded_file"
 
   region                                        = var.region
   environment                                   = var.environment
