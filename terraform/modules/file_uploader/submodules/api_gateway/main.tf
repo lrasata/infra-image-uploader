@@ -77,7 +77,7 @@ resource "aws_api_gateway_integration" "lambda_integration" {
   type = "AWS_PROXY"
   # even though API method is GET, when using AWS_PROXY the integration must always be "POST"
   integration_http_method = "POST"
-  uri                     = var.get_presigned_url_lambda_arn
+  uri                     = "arn:aws:apigateway:${var.region}:lambda:path/2015-03-31/functions/${var.get_presigned_url_lambda_arn}/invocations"
 }
 
 resource "aws_lambda_permission" "apigw_permission" {

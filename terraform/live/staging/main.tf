@@ -1,7 +1,7 @@
 module "file_uploader" {
   source = "../../modules/file_uploader"
 
-  lambda_process_uploaded_file_dir = "../../../src/lambdas/process_uploaded_file"
+  lambda_process_uploaded_file_dir = "../../../terraform/modules/file_uploader/submodules/lambda_functions/src/lambdas/process_uploaded_file"
 
   region                                        = var.region
   environment                                   = var.environment
@@ -14,4 +14,5 @@ module "file_uploader" {
   use_bucket_av                                 = var.use_bucketav
   bucket_av_sns_findings_topic_name             = var.bucketav_sns_findings_topic_name
   lambda_memory_size_mb                         = var.lambda_memory_size_mb
+  route53_zone_name                             = var.route53_zone_name
 }

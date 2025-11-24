@@ -3,6 +3,12 @@ variable "environment" {
   type        = string
 }
 
+variable "region" {
+  description = "The AWS region to deploy resources"
+  type        = string
+  default     = "eu-central-1"
+}
+
 variable "api_file_upload_domain_name" {
   description = "The domain name for the API Gateway"
   type        = string

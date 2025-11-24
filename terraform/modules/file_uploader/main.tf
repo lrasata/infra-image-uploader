@@ -52,6 +52,7 @@ module "api_gateway" {
   source = "./submodules/api_gateway"
 
   environment                 = var.environment
+  region                      = var.region
   api_file_upload_domain_name = var.api_file_upload_domain_name
   backend_certificate_arn     = var.backend_certificate_arn
 
@@ -59,6 +60,7 @@ module "api_gateway" {
   get_presigned_url_lambda_function_name = module.lambda_functions.get_presigned_url_function_name
   get_presigned_url_lambda_arn           = module.lambda_functions.get_presigned_url_function_arn
 
+  depends_on = [module.lambda_functions]
 }
 
 # Call the WAF submodule
@@ -80,9 +82,8 @@ module "route53" {
 }
 
 # Optional: Antivirus submodule (conditional based on use_bucketav)
-module "antivirus" {
-  count  = var.use_bucket_av ? 1 : 0
-  source = "./submodules/antivirus"
+module "file_scanning" {
+  source = "./submodules/file_scanning"
 
   bucketav_sns_findings_topic_name           = var.bucket_av_sns_findings_topic_name
   uploads_bucket_id                          = module.s3_buckets.uploads_bucket_id
