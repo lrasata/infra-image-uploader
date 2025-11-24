@@ -1,6 +1,6 @@
 resource "null_resource" "npm_install_get_presigned_url_lambda" {
   provisioner "local-exec" {
-    working_dir = "${path.module}/lambda_get_presigned_url"
+    working_dir = "${path.module}/lambda_get_presigned_url" # TODO
     command     = "npm ci"
   }
 }

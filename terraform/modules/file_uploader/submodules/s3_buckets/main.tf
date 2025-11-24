@@ -1,0 +1,62 @@
+# S3 bucket for uploads and thumbnails storage
+resource "aws_s3_bucket" "uploads" {
+  bucket = "${var.environment}-${var.uploads_bucket_name}"
+
+  tags = merge(
+    var.common_tags,
+    {
+      Name        = "${var.environment}-uploads-bucket"
+      Description = "Bucket for storing uploaded files and geenrated thumbnails"
+    }
+  )
+}
+
+# ============================================================================
+# UPLOADS BUCKET CONFIGURATION
+# ============================================================================
+
+# Enable server-side encryption (AES256) for uploads bucket
+resource "aws_s3_bucket_server_side_encryption_configuration" "uploads_encryption" {
+  bucket = aws_s3_bucket.uploads.id
+
+  rule {
+    apply_server_side_encryption_by_default {
+      sse_algorithm = "AES256"
+    }
+  }
+}
+
+# Block all public access to uploads bucket
+resource "aws_s3_bucket_public_access_block" "uploads_public_access" {
+  bucket = aws_s3_bucket.uploads.id
+
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
+}
+
+# Enable CORS for presigned URL uploads from browsers
+# Allows the web browser to make a PUT request directly to S3 using presigned url. S3 is the one handling the CORS preflight
+resource "aws_s3_bucket_cors_configuration" "uploads_cors" {
+  bucket = aws_s3_bucket.uploads.id
+
+  cors_rule {
+    allowed_methods = ["PUT", "GET", "HEAD"]
+    allowed_origins = ["*"]
+    allowed_headers = ["*"]
+    expose_headers  = ["ETag"]
+    max_age_seconds = 3000
+  }
+
+  depends_on = [aws_s3_bucket_public_access_block.uploads_public_access]
+}
+
+# Optional: Enable S3 Transfer Acceleration for faster uploads
+resource "aws_s3_bucket_accelerate_configuration" "uploads_acceleration" {
+  count  = var.enable_transfer_acceleration ? 1 : 0
+  bucket = aws_s3_bucket.uploads.id
+  status = "Enabled"
+
+  depends_on = [aws_s3_bucket_public_access_block.uploads_public_access]
+}

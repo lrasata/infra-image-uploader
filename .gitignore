@@ -29,6 +29,6 @@ override.tf.json
 .env
 dist
 modules/**/*.zip
-modules/file_uploader/lambda_process_uploaded_file/node_modules
-modules/file_uploader/lambda_get_presigned_url/node_modules
+src/lambdas/get_presigned_url/node_modules
+src/lambdas/process_uploaded_file/node_modules
 test_scripts
