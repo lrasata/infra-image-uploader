@@ -3,6 +3,7 @@ module "s3_buckets" {
   source = "./submodules/s3_buckets"
 
   environment                  = var.environment
+  app_id                       = var.app_id
   uploads_bucket_name          = var.uploads_bucket_name
   enable_transfer_acceleration = var.enable_transfer_acceleration
 }
@@ -12,6 +13,7 @@ module "dynamodb" {
   source = "./submodules/dynamodb"
 
   environment = var.environment
+  app_id      = var.app_id
 }
 
 # Call the Secrets Manager submodule
@@ -26,6 +28,7 @@ module "lambda_functions" {
   source = "./submodules/lambda_functions"
 
   environment                                   = var.environment
+  app_id                                        = var.app_id
   region                                        = var.region
   lambda_memory_size_mb                         = var.lambda_memory_size_mb
   lambda_upload_presigned_url_expiration_time_s = var.lambda_upload_presigned_url_expiration_time_s
@@ -52,6 +55,7 @@ module "api_gateway" {
   source = "./submodules/api_gateway"
 
   environment                 = var.environment
+  app_id                      = var.app_id
   region                      = var.region
   api_file_upload_domain_name = var.api_file_upload_domain_name
   backend_certificate_arn     = var.backend_certificate_arn
@@ -69,6 +73,7 @@ module "waf" {
 
   environment           = var.environment
   api_gateway_stage_arn = module.api_gateway.api_gateway_stage_arn
+  app_id                = var.app_id
 }
 
 # Call the Route53 submodule (if DNS is managed)

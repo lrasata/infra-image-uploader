@@ -19,11 +19,8 @@ variable "enable_transfer_acceleration" {
   default     = false
 }
 
-
-variable "common_tags" {
-  description = "Common tags to apply to all resources"
-  type        = map(string)
-  default = {
-    Project = "file-uploader"
-  }
+variable "app_id" {
+  description = "Application identifier for tagging resources"
+  type        = string
+  default     = ""
 }

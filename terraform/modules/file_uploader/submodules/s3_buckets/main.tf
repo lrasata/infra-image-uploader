@@ -2,14 +2,14 @@
 resource "aws_s3_bucket" "uploads" {
   bucket = "${var.environment}-${var.uploads_bucket_name}"
 
-  tags = merge(
-    var.common_tags,
-    {
-      Name        = "${var.environment}-uploads-bucket"
-      Description = "Bucket for storing uploaded files and geenrated thumbnails"
-    }
-  )
+  tags = {
+    Name        = "${var.environment}-uploads-bucket"
+    Environment = var.environment
+    App         = var.app_id
+    Description = "Bucket for storing uploaded files and geenrated thumbnails"
+  }
 }
+
 
 # ============================================================================
 # UPLOADS BUCKET CONFIGURATION

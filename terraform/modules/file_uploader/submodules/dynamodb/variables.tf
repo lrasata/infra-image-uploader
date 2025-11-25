@@ -6,3 +6,9 @@ variable "environment" {
     error_message = "Environment must be dev, staging, or prod."
   }
 }
+
+variable "app_id" {
+  description = "Application identifier for tagging resources"
+  type        = string
+  default     = ""
+}

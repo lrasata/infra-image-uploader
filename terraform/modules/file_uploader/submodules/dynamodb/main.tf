@@ -21,7 +21,9 @@ resource "aws_dynamodb_table" "files_metadata_table" {
 
   tags = {
     Environment = var.environment
+    App         = var.app_id
   }
+
 
   deletion_protection_enabled = var.environment == "prod" ? true : false
 

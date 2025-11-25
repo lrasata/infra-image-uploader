@@ -28,3 +28,9 @@ variable "get_presigned_url_lambda_arn" {
   description = "ARN of the get presigned URL Lambda function"
   type        = string
 }
+
+variable "app_id" {
+  description = "Application identifier for tagging resources"
+  type        = string
+  default     = ""
+}

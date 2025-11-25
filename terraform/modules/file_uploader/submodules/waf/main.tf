@@ -3,6 +3,13 @@ resource "aws_wafv2_web_acl" "api_gw_waf" {
   description = "WAF for API Gateway"
   scope       = "REGIONAL"
 
+  tags = {
+    Name        = "${var.environment}-file-uploader-api-gw-waf"
+    Environment = var.environment
+    App         = var.app_id
+  }
+
+
   default_action {
     allow {}
   }

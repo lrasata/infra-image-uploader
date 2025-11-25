@@ -1,6 +1,12 @@
 resource "aws_api_gateway_rest_api" "api" {
   name        = "${var.environment}-get-presigned-url-api"
   description = "API Gateway for requesting pre-signed url"
+
+  tags = {
+    Name        = "${var.environment}-get-presigned-url-api"
+    Environment = var.environment
+    App         = var.app_id
+  }
 }
 
 resource "aws_api_gateway_resource" "file_upload_url_resource" {
@@ -122,6 +128,12 @@ resource "aws_api_gateway_domain_name" "api" {
   regional_certificate_arn = var.backend_certificate_arn
   endpoint_configuration {
     types = ["REGIONAL"]
+  }
+
+  tags = {
+    Name        = var.api_file_upload_domain_name
+    Environment = var.environment
+    App         = var.app_id
   }
 }
 

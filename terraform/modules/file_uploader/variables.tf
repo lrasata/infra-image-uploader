@@ -29,7 +29,13 @@ variable "enable_transfer_acceleration" {
 variable "environment" {
   description = "The environment for the deployment (e.g., dev, staging, prod)"
   type        = string
-  default     = "prod"
+  default     = "staging"
+}
+
+variable "app_id" {
+  description = "A short identifier for the application (used in tags)"
+  type        = string
+  default     = "file-uploader"
 }
 
 variable "backend_certificate_arn" {

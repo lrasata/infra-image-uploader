@@ -7,3 +7,9 @@ variable "api_gateway_stage_arn" {
   description = "ARN of the API Gateway stage to associate with WAF"
   type        = string
 }
+
+variable "app_id" {
+  description = "Application identifier for tagging resources"
+  type        = string
+  default     = ""
+}

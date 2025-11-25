@@ -19,7 +19,7 @@ variable "enable_transfer_acceleration" {
 variable "environment" {
   description = "The environment for the deployment (e.g., dev, staging, prod)"
   type        = string
-  default     = "prod"
+  default     = "staging"
 }
 
 variable "backend_certificate_arn" {
@@ -64,4 +64,10 @@ variable "secret_store_name" {
 variable "route53_zone_name" {
   description = "Route 53 zone name (e.g., epic-trip-planner.com)"
   type        = string
+}
+
+variable "app_id" {
+  description = "Application identifier to be used in tags"
+  type        = string
+  default     = "file-uploader"
 }

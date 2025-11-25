@@ -24,6 +24,10 @@ data "archive_file" "lambda_get_presigned_url_zip" {
 
 resource "aws_iam_role" "lambda_upload_exec_role" {
   name = "${var.environment}-lambda-upload-exec-role"
+  tags = {
+    Environment = var.environment
+    App         = var.app_id
+  }
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -46,6 +50,12 @@ resource "aws_lambda_function" "get_presigned_url" {
   source_code_hash = data.archive_file.lambda_get_presigned_url_zip.output_base64sha256
 
   role = aws_iam_role.lambda_upload_exec_role.arn
+
+  tags = {
+    Name        = "${var.environment}-get-presigned-url-lambda"
+    Environment = var.environment
+    App         = var.app_id
+  }
 
   environment {
     variables = {
@@ -83,6 +93,10 @@ resource "aws_iam_policy" "lambda_upload_policy" {
       }
     ]
   })
+  tags = {
+    Environment = var.environment
+    App         = var.app_id
+  }
 }
 
 resource "aws_iam_role_policy_attachment" "lambda_uploads_policy_attach" {
@@ -111,6 +125,9 @@ data "archive_file" "lambda_process_uploaded_file_zip" {
 
 resource "aws_iam_role" "lambda_process_uploaded_file_exec_role" {
   name = "${var.environment}-lambda-process-uploaded-file-exec-role"
+  tags = merge(var.common_tags, { Name = "${var.environment}-lambda-process-uploaded-file-exec-role" }, var.app_id != "" ? { App = var.app_id } : {})
+
+
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -147,6 +164,12 @@ resource "aws_lambda_function" "process_uploaded_file" {
       SORT_KEY          = var.dynamodb_sort_key
     }
   }
+
+  tags = {
+    Name        = "${var.environment}-process-uploaded-file-lambda"
+    Environment = var.environment
+    App         = var.app_id
+  }
 }
 
 resource "aws_iam_policy" "gt_s3_access_policy" {
@@ -174,6 +197,12 @@ resource "aws_iam_policy" "gt_s3_access_policy" {
       }
     ]
   })
+
+  tags = {
+    Name        = "${var.environment}-lambda-process-uploaded-file-policy"
+    Environment = var.environment
+    App         = var.app_id
+  }
 }
 
 resource "aws_iam_role_policy_attachment" "lambda_gt_access_policy_attach" {
