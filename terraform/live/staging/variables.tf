@@ -42,12 +42,13 @@ variable "lambda_upload_presigned_url_expiration_time_s" {
 variable "use_bucketav" {
   description = "Use BucketAV to prevent malware to be uploaded in S3 bucket"
   type        = bool
-  default     = true
+  default     = false
 }
 
 variable "bucketav_sns_findings_topic_name" {
   description = "Name of SNS topics where BucketAV publishes findings"
   type        = string
+  default     = ""
 }
 
 variable "lambda_memory_size_mb" {

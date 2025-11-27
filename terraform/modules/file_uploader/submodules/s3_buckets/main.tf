@@ -1,6 +1,6 @@
 # S3 bucket for uploads and thumbnails storage
 resource "aws_s3_bucket" "uploads" {
-  bucket = "${var.environment}-${var.uploads_bucket_name}"
+  bucket = "${var.environment}-${var.app_id}-${var.uploads_bucket_name}"
 
   tags = {
     Name        = "${var.environment}-uploads-bucket"

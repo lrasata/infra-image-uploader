@@ -41,6 +41,35 @@ module "file_uploader" {
   bucketav_sns_findings_topic_name              = var.bucketav_sns_findings_topic_name
 }
 ```
+
+## CI/CD (GitHub Actions) ⚙️
+
+This repository includes GitHub Actions workflows to run Terraform plan on pull requests and automatically apply Terraform in controlled scenarios:
+
+- `terraform-plan-pr.yml` - runs on pull request events. It performs `terraform init`, `terraform validate`, `terraform plan` (staging), uploads the plan as an artifact, and comments the output on the PR.
+- `terraform-apply-on-approval.yml` - triggers a Terraform apply to staging when a PR review is submitted with state `approved` and the pull request has the `auto-apply` label. It also supports `workflow_dispatch` for manual apply to staging or prod.
+- `terraform-apply-on-merge.yml` - triggers `terraform apply` on push to the `main` branch (production).
+
+Required GitHub Secrets for these workflows:
+
+- `AWS_ACCESS_KEY_ID` — AWS credentials for the runner.
+- `AWS_SECRET_ACCESS_KEY` — AWS credentials for the runner.
+- `AWS_REGION` — AWS region to use e.g. `eu-central-1`.
+
+Workflow details:
+
+- The plan workflow runs Terraform in `terraform/live/staging` and comments a plan snapshot on the PR.
+- The PR-approval apply workflow only applies if the PR is labeled `auto-apply` and a reviewer approves the PR. This workflow applies to `terraform/live/staging` by default.
+- The push-to-main workflow applies the `terraform/live/prod` environment.
+
+Tips:
+
+- Use branch protections and required checks to prevent unauthorized changes being merged into `main`.
+- Use the `auto-apply` label with caution; it can be used for automated apply to the staging environment after review.
+- You can also manually trigger the `terraform-apply-on-approval` via the `workflow_dispatch` interface to apply to either `staging` or `prod` (requires AWS credentials).
+
+If you want changes across multiple environments to be planned and/or applied, extend the workflow to loop through `terraform/live/*` directories and plan/apply per folder.
+
 >
 > **Prerequisites** to successfully deploy this infrastructure, are described in the Prerequisites section of [DEVELOPMENT.md](DEVELOPMENT.md)
 >
