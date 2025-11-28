@@ -23,31 +23,26 @@ module "secrets" {
   secret_store_name = var.secret_store_name
 }
 
-# Call the Lambda Functions submodule
 module "lambda_functions" {
-  source = "./submodules/lambda_functions"
+  source = "./submodules/lambda_function"
 
-  environment                                   = var.environment
-  app_id                                        = var.app_id
-  region                                        = var.region
-  lambda_memory_size_mb                         = var.lambda_memory_size_mb
-  lambda_upload_presigned_url_expiration_time_s = var.lambda_upload_presigned_url_expiration_time_s
+  # for_each to loop over lambda_configs to set up get_presigned_url and process_uploaded_file lambdas
+  for_each = local.lambda_configs
 
-  # Dependencies from other modules
-  uploads_bucket_id                = module.s3_buckets.uploads_bucket_id
-  uploads_bucket_arn               = module.s3_buckets.uploads_bucket_arn
-  dynamodb_table_name              = module.dynamodb.files_metadata_table_name
-  dynamodb_table_arn               = module.dynamodb.files_metadata_table_arn
-  dynamodb_partition_key           = module.dynamodb.partition_key
-  dynamodb_sort_key                = module.dynamodb.sort_key
-  secret_arn                       = module.secrets.secret_arn
-  lambda_process_uploaded_file_dir = var.lambda_process_uploaded_file_dir
+  # Pass common variables
+  environment = var.environment
+  app_id      = var.app_id
 
-
-  # BucketAV integration
-  use_bucketav                 = var.use_bucket_av
-  auth_secret                  = module.secrets.auth_secret
-  enable_transfer_acceleration = var.enable_transfer_acceleration
+  # Pass variables specific to the current iteration (key is the map key, value is the map content)
+  lambda_name           = each.value.base_name
+  source_dir            = each.value.source_dir
+  handler_file          = each.value.handler_file
+  npm_command           = each.value.npm_command
+  excludes              = each.value.excludes
+  timeout               = each.value.timeout
+  memory_size           = each.value.memory_size
+  environment_vars      = each.value.environment_vars
+  iam_policy_statements = each.value.iam_policy_statements
 }
 
 # Call the API Gateway submodule
@@ -61,8 +56,8 @@ module "api_gateway" {
   backend_certificate_arn     = var.backend_certificate_arn
 
   # Lambda integration
-  get_presigned_url_lambda_function_name = module.lambda_functions.get_presigned_url_function_name
-  get_presigned_url_lambda_arn           = module.lambda_functions.get_presigned_url_function_arn
+  get_presigned_url_lambda_function_name = module.lambda_functions["get_presigned_url"].function_name
+  get_presigned_url_lambda_arn           = module.lambda_functions["get_presigned_url"].function_arn
 
   depends_on = [module.lambda_functions]
 }
@@ -92,9 +87,9 @@ module "file_scanning" {
 
   bucketav_sns_findings_topic_name           = var.bucket_av_sns_findings_topic_name
   uploads_bucket_id                          = module.s3_buckets.uploads_bucket_id
-  process_uploaded_file_lambda_arn           = module.lambda_functions.process_uploaded_file_function_arn
-  process_uploaded_file_lambda_function_name = module.lambda_functions.process_uploaded_file_function_name
-  upload_folder                              = module.lambda_functions.upload_folder
+  process_uploaded_file_lambda_arn           = module.lambda_functions["process_uploaded_file"].function_arn
+  process_uploaded_file_lambda_function_name = module.lambda_functions["process_uploaded_file"].function_name
+  upload_folder                              = local.upload_folder
   uploads_bucket_arn                         = module.s3_buckets.uploads_bucket_arn
   use_bucketav                               = var.use_bucket_av
 }

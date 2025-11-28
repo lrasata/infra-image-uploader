@@ -58,7 +58,7 @@ variable "lambda_upload_presigned_url_expiration_time_s" {
 variable "use_bucket_av" {
   description = "Use BucketAV to prevent malware to be uploaded in S3 bucket"
   type        = bool
-  default     = true
+  default     = false
 }
 
 variable "bucket_av_sns_findings_topic_name" {
@@ -70,9 +70,4 @@ variable "lambda_memory_size_mb" {
   description = "Memory size in MB value for Lambda processing file which allow faster execution"
   type        = number
   default     = 512
-}
-
-variable "lambda_process_uploaded_file_dir" {
-  description = "Path to built Lambda directory, including node_modules"
-  type        = string
 }

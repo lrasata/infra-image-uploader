@@ -1,8 +1,6 @@
 module "file_uploader" {
   source = "../../modules/file_uploader"
 
-  lambda_process_uploaded_file_dir = "../../../terraform/modules/file_uploader/submodules/lambda_functions/src/lambdas/process_uploaded_file"
-
   region                                        = var.region
   environment                                   = var.environment
   app_id                                        = var.app_id

@@ -29,6 +29,5 @@ override.tf.json
 .env
 dist
 terraform/modules/file_uploader/submodules/lambda_functions/**/*.zip
-terraform/modules/file_uploader/submodules/lambda_functions/src/lambdas/get_presigned_url/node_modules
-terraform/modules/file_uploader/submodules/lambda_functions/src/lambdas/process_uploaded_file/node_modules
+terraform/modules/file_uploader/src/**/node_modules
 test_scripts

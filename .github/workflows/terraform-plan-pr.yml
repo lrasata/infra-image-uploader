@@ -4,6 +4,9 @@ on:
   pull_request:
     types: [opened, synchronize, reopened]
 
+env:
+  TF_WORKING_DIR: terraform/live/staging
+
 jobs:
   terraform-plan:
     name: Terraform Plan
@@ -43,13 +46,23 @@ jobs:
           aws-region: ${{ secrets.AWS_REGION }}
 
       - name: Terraform Validate
-        working-directory: terraform/live/staging
+        working-directory: ${{ env.TF_WORKING_DIR }}
         run: |
           terraform init -input=false -upgrade
           terraform validate
 
+      - name: Run TFLint
+        uses: terraform-linters/tflint-action@v4
+        with:
+          working_directory: ${{ env.TF_WORKING_DIR }}
+
+      - name: Run TFSec Security Check
+        uses: aquasecurity/tfsec-action@v1.0.0
+        with:
+          working_directory: ${{ env.TF_WORKING_DIR }}
+
       - name: Terraform Plan (staging)
-        working-directory: terraform/live/staging
+        working-directory: ${{ env.TF_WORKING_DIR }}
         run: |
           terraform plan -out=tfplan -input=false
           terraform show -no-color tfplan > tfplan.txt
