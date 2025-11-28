@@ -1,6 +1,6 @@
 # Call the S3 buckets submodule
-module "s3_buckets" {
-  source = "./submodules/s3_buckets"
+module "s3_bucket" {
+  source = "./submodules/s3_bucket"
 
   environment                  = var.environment
   app_id                       = var.app_id
@@ -86,10 +86,10 @@ module "file_scanning" {
   source = "./submodules/file_scanning"
 
   bucketav_sns_findings_topic_name           = var.bucket_av_sns_findings_topic_name
-  uploads_bucket_id                          = module.s3_buckets.uploads_bucket_id
+  uploads_bucket_id                          = module.s3_bucket.uploads_bucket_id
   process_uploaded_file_lambda_arn           = module.lambda_functions["process_uploaded_file"].function_arn
   process_uploaded_file_lambda_function_name = module.lambda_functions["process_uploaded_file"].function_name
   upload_folder                              = local.upload_folder
-  uploads_bucket_arn                         = module.s3_buckets.uploads_bucket_arn
+  uploads_bucket_arn                         = module.s3_bucket.uploads_bucket_arn
   use_bucketav                               = var.use_bucket_av
 }

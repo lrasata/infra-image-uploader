@@ -5,17 +5,17 @@ output "api_gateway_invoke_url" {
 
 output "uploads_bucket_id" {
   description = "The S3 uploads bucket ID (name)"
-  value       = module.s3_buckets.uploads_bucket_id
+  value       = module.s3_bucket.uploads_bucket_id
 }
 
 output "uploads_bucket_arn" {
   description = "The ARN of the S3 uploads bucket"
-  value       = module.s3_buckets.uploads_bucket_arn
+  value       = module.s3_bucket.uploads_bucket_arn
 }
 
 output "uploads_bucket_regional_domain_name" {
   description = "The regional domain name of the S3 bucket (for CloudFront origin)"
-  value       = module.s3_buckets.uploads_bucket_regional_domain_name
+  value       = module.s3_bucket.uploads_bucket_regional_domain_name
 }
 
 output "dynamo_db_table_name" {

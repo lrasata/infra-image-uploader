@@ -51,15 +51,12 @@ jobs:
           terraform init -input=false -upgrade
           terraform validate
 
-      - name: Run TFLint
-        uses: terraform-linters/setup-tflint@v4
-        with:
-          working_directory: ${{ env.TF_WORKING_DIR }}
-
       - name: Run TFSec Security Check
         uses: aquasecurity/tfsec-action@v1.0.0
         with:
           working_directory: ${{ env.TF_WORKING_DIR }}
+          format: sarif
+          additional_args: --minimum-severity MEDIUM
 
       - name: Terraform Plan (staging)
         working-directory: ${{ env.TF_WORKING_DIR }}

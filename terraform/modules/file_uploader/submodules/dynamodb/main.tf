@@ -24,10 +24,14 @@ resource "aws_dynamodb_table" "files_metadata_table" {
     App         = var.app_id
   }
 
+  server_side_encryption {
+    enabled = true
+  }
 
   deletion_protection_enabled = var.environment == "prod" ? true : false
 
   point_in_time_recovery {
     enabled = true
   }
+
 }

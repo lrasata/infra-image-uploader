@@ -17,7 +17,7 @@ locals {
       environment_vars = {
         REGION             = var.region
         EXPIRATION_TIME_S  = var.lambda_upload_presigned_url_expiration_time_s
-        UPLOAD_BUCKET      = module.s3_buckets.uploads_bucket_id
+        UPLOAD_BUCKET      = module.s3_bucket.uploads_bucket_id
         API_GW_AUTH_SECRET = module.secrets.auth_secret
         UPLOAD_FOLDER      = local.upload_folder
         USE_S3_ACCEL       = var.enable_transfer_acceleration
@@ -29,7 +29,7 @@ locals {
         {
           Action   = ["s3:GetObject", "s3:PutObject"]
           Effect   = "Allow"
-          Resource = ["${module.s3_buckets.uploads_bucket_arn}/*"]
+          Resource = ["${module.s3_bucket.uploads_bucket_arn}/*"]
         },
         {
           Action   = ["secretsmanager:GetSecretValue"]
@@ -67,13 +67,13 @@ locals {
           Action = ["s3:GetObject", "s3:GetObjectVersion", "s3:ListBucket", "s3:PutObject"]
           Effect = "Allow"
           Resource = [
-            "${module.s3_buckets.uploads_bucket_arn}/*",
-            module.s3_buckets.uploads_bucket_arn
+            "${module.s3_bucket.uploads_bucket_arn}/*",
+            module.s3_bucket.uploads_bucket_arn
           ]
         }
       ]
     }
   }
 
-  depends_on = [module.s3_buckets, module.dynamodb]
+  depends_on = [module.s3_bucket, module.dynamodb]
 }

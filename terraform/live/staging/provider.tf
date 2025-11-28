@@ -1,4 +1,3 @@
-# Specify below the corresponding values related to this deployment
 terraform {
   backend "s3" {
     bucket         = "file-uploader-terraform-state-387836084035"
@@ -7,4 +6,17 @@ terraform {
     encrypt        = true
     dynamodb_table = "staging-file-uploader-terraform-locks"
   }
+
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~> 6.18"
+    }
+  }
+
+  required_version = ">= 1.6.0, < 2.0.0"
+}
+
+provider "aws" {
+  region = var.region
 }

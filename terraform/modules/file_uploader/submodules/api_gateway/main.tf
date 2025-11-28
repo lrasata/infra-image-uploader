@@ -117,10 +117,32 @@ resource "aws_api_gateway_deployment" "deployment" {
   ]
 }
 
+resource "aws_cloudwatch_log_group" "apigw_access_logs" {
+  name              = "/aws/apigateway/${var.environment}-${var.app_id}-access-logs"
+  retention_in_days = 30
+}
+
 resource "aws_api_gateway_stage" "api_gateway_stage" {
-  deployment_id = aws_api_gateway_deployment.deployment.id
-  rest_api_id   = aws_api_gateway_rest_api.api.id
-  stage_name    = var.environment
+  deployment_id        = aws_api_gateway_deployment.deployment.id
+  rest_api_id          = aws_api_gateway_rest_api.api.id
+  stage_name           = var.environment
+  xray_tracing_enabled = true
+
+  access_log_settings {
+    destination_arn = aws_cloudwatch_log_group.apigw_access_logs.arn
+    format = jsonencode({
+      requestId      = "$context.requestId"
+      ip             = "$context.identity.sourceIp"
+      caller         = "$context.identity.caller"
+      user           = "$context.identity.user"
+      requestTime    = "$context.requestTime"
+      httpMethod     = "$context.httpMethod"
+      resourcePath   = "$context.resourcePath"
+      status         = "$context.status"
+      protocol       = "$context.protocol"
+      responseLength = "$context.responseLength"
+    })
+  }
 }
 
 resource "aws_api_gateway_domain_name" "api" {
@@ -129,6 +151,9 @@ resource "aws_api_gateway_domain_name" "api" {
   endpoint_configuration {
     types = ["REGIONAL"]
   }
+
+  # 💡 MODERN POLICY ONLY - only supporting at least TLS 1.2 can connect to this API
+  security_policy = "TLS_1_2"
 
   tags = {
     Name        = var.api_file_upload_domain_name
@@ -142,5 +167,32 @@ resource "aws_api_gateway_base_path_mapping" "api_mapping" {
   api_id      = aws_api_gateway_rest_api.api.id
   stage_name  = aws_api_gateway_stage.api_gateway_stage.stage_name
   base_path   = "" # empty string means root path
+}
+
+# Define a CloudWatch Log Group
+resource "aws_cloudwatch_log_group" "api_gateway" {
+  name              = "/aws/apigw/${var.environment}-${var.app_id}"
+  retention_in_days = 30
+}
+
+# Define the IAM Role that API Gateway uses to write logs
+resource "aws_iam_role" "cloudwatch_role" {
+  name = "${var.environment}-apigw-cloudwatch-role"
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Action = "sts:AssumeRole"
+      Effect = "Allow"
+      Principal = {
+        Service = "apigateway.amazonaws.com"
+      }
+    }]
+  })
+}
+
+# Attach the policy allowing logging
+resource "aws_iam_role_policy_attachment" "cloudwatch_attachment" {
+  role       = aws_iam_role.cloudwatch_role.name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonAPIGatewayPushToCloudWatchLogs"
 }
 
