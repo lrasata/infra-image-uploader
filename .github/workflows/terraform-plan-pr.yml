@@ -52,7 +52,7 @@ jobs:
           terraform validate
 
       - name: Run TFLint
-        uses: terraform-linters/tflint-action@v4
+        uses: terraform-linters/setup-tflint@v4
         with:
           working_directory: ${{ env.TF_WORKING_DIR }}
 
