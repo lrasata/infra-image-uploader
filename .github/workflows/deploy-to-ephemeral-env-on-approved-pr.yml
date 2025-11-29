@@ -1,0 +1,114 @@
+name: Deploy to Ephemeral Environment
+
+on:
+  pull_request:
+    types: [approved]
+  workflow_dispatch:
+    inputs:
+      pr_number:
+        description: 'PR Number'
+        required: true
+
+env:
+  TF_WORKING_DIR: terraform/live/staging
+
+jobs:
+  deploy-ephemeral:
+    name: Deploy to Ephemeral Environment
+    runs-on: ubuntu-latest
+    environment: ephemeral
+
+    permissions:
+      id-token: write
+      contents: read
+      pull-requests: write
+
+    env:
+      TF_VAR_region: ${{ secrets.AWS_REGION }}
+      TF_VAR_app_id: file-uploader-eph-${{ github.event.pull_request.number || github.event.inputs.pr_number }}
+      TF_VAR_environment: ephemeral-pr-${{ github.event.pull_request.number || github.event.inputs.pr_number }}
+      TF_VAR_api_file_upload_domain_name: eph-pr${{ github.event.pull_request.number || github.event.inputs.pr_number }}-api-file-upload.epic-trip-planner.com
+      TF_VAR_backend_certificate_arn: ${{secrets.BACKEND_CERTIFICATE_ARN}}
+      TF_VAR_uploads_bucket_name: file-upload-bucket-eph-pr${{ github.event.pull_request.number || github.event.inputs.pr_number }}
+      TF_VAR_enable_transfer_acceleration: false
+      TF_VAR_secret_store_name: ${{secrets.SECRET_STORE_NAME}}
+      TF_VAR_route53_zone_name: epic-trip-planner.com
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.6.0
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::387836084035:role/gitHubFileUploader
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Create unique backend key
+        run: |
+          echo "TF_BACKEND_KEY=ephemeral/pr-${{ github.event.pull_request.number || github.event.inputs.pr_number }}/terraform.tfstate" >> $GITHUB_ENV
+
+      - name: Terraform Init with unique backend
+        working-directory: ${{ env.TF_WORKING_DIR }}
+        run: |
+          terraform init -reconfigure \
+            -backend-config="key=${{ env.TF_BACKEND_KEY }}"
+
+      - name: Terraform Apply
+        working-directory: ${{ env.TF_WORKING_DIR }}
+        run: |
+          terraform apply -auto-approve
+
+      - name: Comment deployment success
+        if: success()
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const prNumber = context.payload.pull_request?.number || "${{ github.event.inputs.pr_number }}";
+            const commentBody = `
+            ### ✅ Ephemeral Environment Deployed Successfully
+            
+            **Environment:** ephemeral-pr-${prNumber}
+            **Domain:** eph-pr${prNumber}-api-file-upload.epic-trip-planner.com
+            
+            The changes have been successfully deployed to an ephemeral environment for testing.
+            
+            ⚠️ **Note:** This environment will be automatically destroyed when the PR is merged or closed.
+            `;
+            
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: prNumber,
+              body: commentBody
+            });
+
+      - name: Comment deployment failure
+        if: failure()
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const prNumber = context.payload.pull_request?.number || "${{ github.event.inputs.pr_number }}";
+            const commentBody = `
+            ### ❌ Ephemeral Environment Deployment Failed
+            
+            The deployment to ephemeral environment failed. Please check the workflow logs for details.
+            
+            This indicates that the terraform apply would likely fail in the actual environment.
+            `;
+            
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: prNumber,
+              body: commentBody
+            });
