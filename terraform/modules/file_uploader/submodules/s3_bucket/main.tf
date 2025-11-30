@@ -1,4 +1,5 @@
 # S3 bucket for uploads and thumbnails storage
+# tfsec:ignore:aws-s3-enable-bucket-logging
 resource "aws_s3_bucket" "uploads" {
   bucket = "${var.environment}-${var.app_id}-${var.uploads_bucket_name}"
 
@@ -29,7 +30,8 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "uploads_encryptio
 
   rule {
     apply_server_side_encryption_by_default {
-      sse_algorithm = "aws:kms"
+      sse_algorithm     = "aws:kms"
+      kms_master_key_id = aws_kms_key.s3_cmk.arn
     }
   }
 }
@@ -108,8 +110,8 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "log_target_sse" {
 
   rule {
     apply_server_side_encryption_by_default {
-      sse_algorithm = "aws:kms"
-      # AWS-managed key
+      sse_algorithm     = "aws:kms"
+      kms_master_key_id = aws_kms_key.s3_cmk.arn
     }
   }
 }
@@ -136,4 +138,9 @@ resource "aws_s3_bucket_logging" "uploads_logging" {
   bucket        = aws_s3_bucket.uploads.id
   target_bucket = aws_s3_bucket.log_target.id
   target_prefix = "${var.environment}-${var.app_id}-uploads-access-logs/"
+
+  depends_on = [
+    aws_s3_bucket_policy.log_target_policy,
+    aws_s3_bucket_ownership_controls.log_target_ownership
+  ]
 }
