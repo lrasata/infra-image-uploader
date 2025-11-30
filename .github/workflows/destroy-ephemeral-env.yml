@@ -9,7 +9,7 @@ on:
         type: number
 
 env:
-  TF_WORKING_DIR: terraform/live/staging
+  TF_WORKING_DIR: terraform/live/ephemeral
 
 jobs:
   destroy-ephemeral:
