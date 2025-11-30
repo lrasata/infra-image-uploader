@@ -28,21 +28,47 @@ jobs:
       TF_VAR_enable_transfer_acceleration: true
       TF_VAR_secret_store_name: ${{secrets.SECRET_STORE_NAME}}
       TF_VAR_route53_zone_name: epic-trip-planner.com
+      TF_VAR_common_tags: '{"Project":"file-uploader"}'
 
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
       - name: Build Lambda packages
         run: |
-          cd terraform/modules/file_uploader/src/lambdas/get_presigned_url
-          npm ci
-          zip -r ../../../../submodules/lambda_function/lambda_get-presigned-url.zip . -x "node_modules/.bin/*"
+          # Install system deps that may be required for native modules (e.g. sharp)
+          sudo apt-get update && sudo apt-get install -y build-essential python3 libvips-dev
 
+          # build lambda package for get_presigned_url
+          cd terraform/modules/file_uploader/src/lambdas/get_presigned_url
+          npm ci --silent --no-audit
+          ls -la node_modules
+          zip -r ../../../submodules/lambda_function/lambda_get-presigned-url.zip . -x "node_modules/.bin/*"
+
+          # build lambda package for process_uploaded_file
           cd ../process_uploaded_file
-          npm ci && npm i sharp
-          zip -r ../../../../submodules/lambda_function/lambda_get-presigned-url.zip . -x "node_modules/.bin/*"
+          npm ci --silent --no-audit
+          ls -la node_modules
+          zip -r ../../../submodules/lambda_function/lambda_process-uploaded-file.zip . -x "node_modules/.bin/*"
+
+      - name: List Lambda package outputs for debugging
+        run: |
+          echo "Current working dir: $(pwd)"
+          echo "Lambda package files:"
+          ls -la terraform/modules/file_uploader/submodules/lambda_function || true
+
+      - name: Verify lambda zip files exist
+        run: |
+          echo "Verify lambda get-presigned-url package"
+          test -f terraform/modules/file_uploader/submodules/lambda_function/lambda_get-presigned-url.zip || (echo 'lambda_get-presigned-url.zip missing' && exit 1)
+          echo "Verify lambda process-uploaded-file package"
+          test -f terraform/modules/file_uploader/submodules/lambda_function/lambda_process-uploaded-file.zip || (echo 'lambda_process-uploaded-file.zip missing' && exit 1)
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v2
@@ -81,7 +107,7 @@ jobs:
           name: terraform-plan-staging
           path: terraform/live/staging/tfplan.txt
 
-      - name: Add PR comment with output
+      - name: Add PR comment with output (safe-truncate)
         if: github.event_name == 'pull_request'
         uses: actions/github-script@v7
         with:
@@ -89,24 +115,13 @@ jobs:
           script: |
             const fs = require('fs');
             const body = fs.readFileSync('terraform/live/staging/tfplan.txt', 'utf8');
-
-            const commentBody = `
-            ### Terraform Plan (staging)
-      
-            <details>
-            <summary>Click to expand plan</summary>
-      
-            \`\`\`
-            ${body}
-            \`\`\`
-      
-            </details>
-            `;
-            
+            const MAX_LEN = 60000;
+            const planPreview = body.length > MAX_LEN ? body.slice(0, MAX_LEN - 1000) + '\n\n...(truncated)' : body;
+            const commentBody = `### Terraform Plan (staging)\n\n<details>\n<summary>Click to expand plan</summary>\n\n\`\`\`\n${planPreview}\n\`\`\`\n\n</details>`;
             await github.rest.issues.createComment({
-            owner: context.repo.owner,
-            repo: context.repo.repo,
-            issue_number: context.issue.number,
-            body: commentBody
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: commentBody
             });
       

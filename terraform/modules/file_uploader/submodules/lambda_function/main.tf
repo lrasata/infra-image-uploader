@@ -36,13 +36,20 @@ resource "aws_iam_policy" "lambda_custom_policy" {
 }
 
 # --- 5. LAMBDA FUNCTION ---
+data "archive_file" "lambda_zip" {
+  type        = "zip"
+  source_dir  = var.source_dir
+  output_path = "${path.module}/lambda_${var.lambda_name}.zip"
+  excludes    = var.excludes
+}
+
 resource "aws_lambda_function" "lambda_function" {
   function_name = "${var.environment}-${var.lambda_name}-lambda"
   runtime       = "nodejs20.x"
   handler       = var.handler_file
 
-  filename         = "${path.module}/lambda_${var.lambda_name}.zip"
-  source_code_hash = filebase64sha256("${path.module}/lambda_${var.lambda_name}.zip")
+  filename         = data.archive_file.lambda_zip.output_path
+  source_code_hash = data.archive_file.lambda_zip.output_base64sha256
 
   role        = aws_iam_role.lambda_exec_role.arn
   timeout     = var.timeout

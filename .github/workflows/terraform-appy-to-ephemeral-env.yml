@@ -41,6 +41,19 @@ jobs:
         with:
           ref: ${{ github.event.pull_request.head.sha }}
 
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Build Lambda packages (ephemeral)
+        run: |
+          sudo apt-get update && sudo apt-get install -y build-essential python3 libvips-dev
+          cd terraform/modules/file_uploader/src/lambdas/get_presigned_url
+          npm ci --silent --no-audit
+          cd ../process_uploaded_file
+          npm ci --silent --no-audit
+
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v2
         with:
