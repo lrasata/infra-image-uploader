@@ -20,7 +20,6 @@ locals {
         API_GW_AUTH_SECRET = module.secrets.auth_secret
         UPLOAD_FOLDER      = local.upload_folder
         USE_S3_ACCEL       = var.enable_transfer_acceleration
-        # PARTITION_KEY should be the name of the partition key (e.g., 'id'), not the table ARN.
         PARTITION_KEY      = module.dynamodb.partition_key
         SORT_KEY           = module.dynamodb.sort_key
       }
@@ -35,6 +34,12 @@ locals {
           Action   = ["secretsmanager:GetSecretValue"]
           Effect   = "Allow"
           Resource = [module.secrets.secret_arn]
+        }
+        ,
+        {
+          Action = ["kms:GenerateDataKey","kms:Decrypt"]
+          Effect = "Allow"
+          Resource = [module.s3_bucket.uploads_bucket_kms_key_arn]
         }
       ]
     }
@@ -69,6 +74,12 @@ locals {
             "${module.s3_bucket.uploads_bucket_arn}/*",
             module.s3_bucket.uploads_bucket_arn
           ]
+        }
+        ,
+        {
+          Action = ["kms:GenerateDataKey","kms:Decrypt"]
+          Effect = "Allow"
+          Resource = [module.s3_bucket.uploads_bucket_kms_key_arn]
         }
       ]
     }

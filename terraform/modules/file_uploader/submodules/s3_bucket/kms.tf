@@ -47,6 +47,28 @@ resource "aws_kms_key" "s3_cmk" {
           }
         }
       }
+      ,
+      # Allow Lambda functions (execution roles) from the same account to use the key for encrypt/decrypt and generate data key
+      {
+        Sid    = "AllowLambdasUseOfKey"
+        Effect = "Allow"
+        Principal = {
+          AWS = "*" # enforced via condition on principal ARN
+        }
+        Action = [
+          "kms:Encrypt",
+          "kms:Decrypt",
+          "kms:GenerateDataKey",
+          "kms:ReEncrypt*",
+          "kms:DescribeKey"
+        ]
+        Resource = "*"
+        Condition = {
+          ArnLike = {
+            "aws:PrincipalArn" = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/*-lambda-*"
+          }
+        }
+      }
     ]
   })
 }
