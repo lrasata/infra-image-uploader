@@ -1,5 +1,4 @@
 # S3 bucket for uploads and thumbnails storage
-# tfsec:ignore:aws-s3-enable-bucket-logging
 resource "aws_s3_bucket" "uploads" {
   bucket = "${var.environment}-${var.app_id}-${var.uploads_bucket_name}"
 
