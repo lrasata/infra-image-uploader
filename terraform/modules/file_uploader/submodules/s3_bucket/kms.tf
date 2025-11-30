@@ -5,7 +5,7 @@ resource "aws_kms_key" "s3_cmk" {
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
-      # Allow account to administer the key
+      # Allow root account full access
       {
         Sid    = "AllowRootAccount"
         Effect = "Allow"
@@ -16,7 +16,20 @@ resource "aws_kms_key" "s3_cmk" {
         Resource = "*"
       },
 
-      # Allow S3 to use this key for server access logs
+      # Allow GitHub Actions role to manage the key
+      {
+        Sid    = "AllowGithubActions"
+        Effect = "Allow"
+        Principal = {
+          AWS = "arn:aws:iam::387836084035:role/gitHubFileUploader"
+        }
+        Action = [
+          "kms:*"   # full key management actions including PutKeyPolicy
+        ]
+        Resource = "*"
+      },
+
+      # Allow S3 logging to use the key
       {
         Sid    = "AllowS3Logging"
         Effect = "Allow"
