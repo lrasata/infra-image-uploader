@@ -2,17 +2,17 @@
 
 `sharp` is used in the Lambda function which process files after they are uploaded in S3 bucket. It is use to generate thumbnail of uplaoded files.
 
-See in folder: `modules\file_uploader\lambda_process_uploaded_file\processUploadedFile.js`
+See in folder: `terraform/modules/file_uploader/submodules/lambda_functions/src/lambdas/process_uploaded_file/processUploadedFile.js`
 
 ## On Linux or MacOS
 
 Please refer to [the official documentation](https://www.npmjs.com/package/sharp)
 
-Execute commands locally in the folder : `cd \modules\file_uploader\lambda_process_uploaded_file`
+Execute commands locally in the folder : `cd terraform/modules/file_uploader/submodules/lambda_functions/src/lambdas/process_uploaded_file`
 
 ## On Windows
 
-Execute  the following commands locally in the folder : `cd infra-file-uploader\modules\file_uploader\lambda_process_uploaded_file`
+Execute  the following commands locally in the folder : `cd terraform\modules\file_uploader\submodules\lambda_functions\src\lambdas\process_uploaded_file`
 
 ### Run an Amazon Linux container
 
@@ -29,4 +29,4 @@ npm install sharp
 exit
 ```
 
-At this point you should have `node_modules` folder generated inside `lambda_process_uploaded_file` which has been generated on the docker container.
+At this point you should have `node_modules` folder generated inside `process_uploaded_file` which has been generated on the docker container.
