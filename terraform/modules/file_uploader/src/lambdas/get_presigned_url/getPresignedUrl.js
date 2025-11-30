@@ -42,11 +42,18 @@ exports.handler = async (event) => {
     const extension = query.ext;
     const apiResource = query.resource;
 
-    if (!partitionKey || !originalFilename || !extension) {
+    // Check for missing query params and report which ones are missing
+    const missingParams = [];
+    if (!partitionKey) missingParams.push(PARTITION_KEY || 'id');
+    if (!originalFilename) missingParams.push(SORT_KEY || 'file_key');
+    if (!extension) missingParams.push('ext');
+    if (!apiResource) missingParams.push('resource');
+
+    if (missingParams.length > 0) {
         return {
             statusCode: 400,
             headers: corsHeaders,
-            body: JSON.stringify({ error: "Query params could be missing" })
+            body: JSON.stringify({ error: `Missing query params: ${missingParams.join(', ')}` })
         };
     }
 

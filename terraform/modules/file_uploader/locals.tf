@@ -20,8 +20,9 @@ locals {
         API_GW_AUTH_SECRET = module.secrets.auth_secret
         UPLOAD_FOLDER      = local.upload_folder
         USE_S3_ACCEL       = var.enable_transfer_acceleration
-        PARTITION_KEY      = module.dynamodb.files_metadata_table_arn
-        SORT_KEY           = module.dynamodb.partition_key
+        # PARTITION_KEY should be the name of the partition key (e.g., 'id'), not the table ARN.
+        PARTITION_KEY      = module.dynamodb.partition_key
+        SORT_KEY           = module.dynamodb.sort_key
       }
       # Policy unique to this Lambda
       iam_policy_statements = [
