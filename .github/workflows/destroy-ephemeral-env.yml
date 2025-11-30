@@ -48,15 +48,10 @@ jobs:
           role-to-assume: arn:aws:iam::387836084035:role/gitHubFileUploader
           aws-region: ${{ secrets.AWS_REGION }}
 
-      - name: Set unique backend key
-        run: |
-          echo "TF_BACKEND_KEY=ephemeral/pr-${{ github.event.inputs.pr_number }}/terraform.tfstate" >> $GITHUB_ENV
-
       - name: Terraform Init with backend
         working-directory: ${{ env.TF_WORKING_DIR }}
         run: |
-          terraform init -reconfigure \
-            -backend-config="key=${{ env.TF_BACKEND_KEY }}"
+          terraform init -input=false
 
       - name: Terraform Destroy
         working-directory: ${{ env.TF_WORKING_DIR }}

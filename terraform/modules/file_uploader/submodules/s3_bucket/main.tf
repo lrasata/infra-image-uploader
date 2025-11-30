@@ -29,8 +29,7 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "uploads_encryptio
 
   rule {
     apply_server_side_encryption_by_default {
-      sse_algorithm     = "aws:kms"
-      kms_master_key_id = aws_kms_key.s3_upload_key.arn
+      sse_algorithm = "aws:kms"
     }
   }
 }
@@ -78,6 +77,15 @@ resource "aws_s3_bucket" "log_target" {
   bucket = "${var.environment}-${var.app_id}-s3-access-logs"
 }
 
+
+resource "aws_s3_bucket_ownership_controls" "log_target_ownership" {
+  bucket = aws_s3_bucket.log_target.id
+
+  rule {
+    object_ownership = "BucketOwnerEnforced"
+  }
+}
+
 resource "aws_s3_bucket_versioning" "log_target_versioning" {
   bucket = aws_s3_bucket.log_target.id
 
@@ -106,10 +114,21 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "log_target_sse" {
   }
 }
 
-# Logging Target Bucket ACL (required for S3 logs)
-resource "aws_s3_bucket_acl" "log_target_acl" {
+# Logging permissions (modern way — bucket policy)
+resource "aws_s3_bucket_policy" "log_target_policy" {
   bucket = aws_s3_bucket.log_target.id
-  acl    = "log-delivery-write"
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect    = "Allow"
+        Principal = { Service = "logging.s3.amazonaws.com" }
+        Action    = "s3:PutObject"
+        Resource  = "${aws_s3_bucket.log_target.arn}/*"
+      }
+    ]
+  })
 }
 
 # Source Bucket (where uploads go), with logging configured directly

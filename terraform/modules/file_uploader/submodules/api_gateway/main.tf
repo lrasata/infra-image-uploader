@@ -196,3 +196,8 @@ resource "aws_iam_role_policy_attachment" "cloudwatch_attachment" {
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonAPIGatewayPushToCloudWatchLogs"
 }
 
+# Sets CloudWatch Logs role for the entire AWS account
+# API stage cannot apply logging until this account-level setting exists.
+resource "aws_api_gateway_account" "account" {
+  cloudwatch_role_arn = aws_iam_role.cloudwatch_role.arn
+}
