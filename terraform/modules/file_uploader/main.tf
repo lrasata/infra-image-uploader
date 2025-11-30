@@ -37,7 +37,6 @@ module "lambda_functions" {
   lambda_name           = each.value.base_name
   source_dir            = each.value.source_dir
   handler_file          = each.value.handler_file
-  npm_command           = each.value.npm_command
   excludes              = each.value.excludes
   timeout               = each.value.timeout
   memory_size           = each.value.memory_size

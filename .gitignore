@@ -28,6 +28,6 @@ override.tf.json
 # avoid accidental push
 .env
 dist
-terraform/modules/file_uploader/submodules/lambda_functions/**/*.zip
+terraform/modules/file_uploader/submodules/lambda_function/**/*.zip
 terraform/modules/file_uploader/src/**/node_modules
 test_scripts

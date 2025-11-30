@@ -1,29 +1,4 @@
-# --- 1. NPM INSTALL (PACKAGING) ---
-resource "null_resource" "npm_install" {
-  triggers = {
-    # Trigger a rebuild if the source code directory changes
-    source_hash = filesha256("${var.source_dir}/package.json")
-  }
-
-  provisioner "local-exec" {
-    working_dir = var.source_dir
-    # Use the custom command defined in the configuration map
-    command = var.npm_command
-  }
-}
-
-# --- 2. ZIP ARCHIVE ---
-data "archive_file" "lambda_zip" {
-  type       = "zip"
-  source_dir = var.source_dir
-  # Use the lambda_name to ensure unique zip file paths
-  output_path = "${path.module}/lambda_${var.lambda_name}.zip"
-  excludes    = var.excludes
-
-  depends_on = [null_resource.npm_install]
-}
-
-# --- 3. IAM ROLE ---
+# --- IAM ROLE ---
 resource "aws_iam_role" "lambda_exec_role" {
   name = "${var.environment}-lambda-${var.lambda_name}-exec-role"
   tags = {
@@ -66,8 +41,8 @@ resource "aws_lambda_function" "lambda_function" {
   runtime       = "nodejs20.x"
   handler       = var.handler_file
 
-  filename         = data.archive_file.lambda_zip.output_path
-  source_code_hash = data.archive_file.lambda_zip.output_base64sha256
+  filename         = "${path.module}/lambda_${var.lambda_name}.zip"
+  source_code_hash = filebase64sha256("${path.module}/lambda_${var.lambda_name}.zip")
 
   role        = aws_iam_role.lambda_exec_role.arn
   timeout     = var.timeout
@@ -83,7 +58,7 @@ resource "aws_lambda_function" "lambda_function" {
     variables = var.environment_vars
   }
 
-  depends_on = [data.archive_file.lambda_zip, aws_iam_role.lambda_exec_role]
+  depends_on = [aws_iam_role.lambda_exec_role]
 }
 
 # --- 6. IAM ATTACHMENTS ---

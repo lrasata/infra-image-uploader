@@ -26,11 +26,6 @@ variable "source_dir" {
   type        = string
 }
 
-variable "npm_command" {
-  description = "The command to run for installing dependencies (e.g., 'npm ci' or 'npm i sharp && npm ci')."
-  type        = string
-}
-
 variable "excludes" {
   description = "A list of patterns to exclude from the Lambda deployment ZIP file."
   type        = list(string)

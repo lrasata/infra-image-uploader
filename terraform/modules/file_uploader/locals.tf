@@ -9,7 +9,6 @@ locals {
       base_name    = "get-presigned-url"
       source_dir   = "${path.module}/src/lambdas/get_presigned_url"
       handler_file = "getPresignedUrl.handler"
-      npm_command  = "npm ci"
       excludes     = []
       timeout      = 5
       memory_size  = 128
@@ -43,7 +42,6 @@ locals {
       base_name    = "process-uploaded-file"
       source_dir   = "${path.module}/src/lambdas/process_uploaded_file"
       handler_file = "processUploadedFile.handler"
-      npm_command  = "npm i sharp && npm ci" # Custom npm command for sharp
       excludes     = ["node_modules/.bin/*"]
       timeout      = 30
       memory_size  = var.lambda_memory_size_mb

@@ -24,7 +24,7 @@ resource "aws_kms_key" "s3_cmk" {
           AWS = "arn:aws:iam::387836084035:role/gitHubFileUploader"
         }
         Action = [
-          "kms:*"   # full key management actions including PutKeyPolicy
+          "kms:*" # full key management actions including PutKeyPolicy
         ]
         Resource = "*"
       },

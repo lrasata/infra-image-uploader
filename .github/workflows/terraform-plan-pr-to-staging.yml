@@ -34,6 +34,16 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Build Lambda packages
+        run: |
+          cd terraform/modules/file_uploader/src/lambdas/get_presigned_url
+          npm ci
+          zip -r ../../../../submodules/lambda_function/lambda_get-presigned-url.zip . -x "node_modules/.bin/*"
+
+          cd ../process_uploaded_file
+          npm ci && npm i sharp
+          zip -r ../../../../submodules/lambda_function/lambda_get-presigned-url.zip . -x "node_modules/.bin/*"
+
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v2
         with:
