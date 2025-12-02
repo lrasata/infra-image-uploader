@@ -18,7 +18,7 @@ output "uploads_bucket_kms_key_arn" {
   value       = aws_kms_key.s3_cmk.arn
 }
 
-# output "uploads_bucket_acceleration_domain_name" {
-#   description = "Acceleration domain name for S3 Transfer Acceleration"
-#   value       = var.enable_transfer_acceleration ? aws_s3_bucket.uploads.accelerated_domain_name : null
-# }
+output "uploads_bucket_acceleration_domain_name" {
+  description = "Acceleration domain name for S3 Transfer Acceleration"
+  value       = var.enable_transfer_acceleration ? "${aws_s3_bucket.uploads.bucket}.s3-accelerate.amazonaws.com" : null
+}
