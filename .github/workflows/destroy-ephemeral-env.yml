@@ -1,12 +1,16 @@
 name: Destroy Ephemeral Environment
 
 on:
-  workflow_dispatch:
+  workflow_dispatch: # Trigger manually
     inputs:
       pr_number:
         description: 'PR Number of the ephemeral environment to destroy'
         required: true
         type: number
+
+  pull_request: # Triggered when the PR is closed
+    types:
+      - closed
 
 env:
   TF_WORKING_DIR: terraform/live/ephemeral
