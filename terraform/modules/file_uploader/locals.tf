@@ -37,8 +37,8 @@ locals {
         }
         ,
         {
-          Action = ["kms:GenerateDataKey","kms:Decrypt"]
-          Effect = "Allow"
+          Action   = ["kms:GenerateDataKey", "kms:Decrypt"]
+          Effect   = "Allow"
           Resource = [module.s3_bucket.uploads_bucket_kms_key_arn]
         }
       ]
@@ -77,8 +77,8 @@ locals {
         }
         ,
         {
-          Action = ["kms:GenerateDataKey","kms:Decrypt"]
-          Effect = "Allow"
+          Action   = ["kms:GenerateDataKey", "kms:Decrypt"]
+          Effect   = "Allow"
           Resource = [module.s3_bucket.uploads_bucket_kms_key_arn]
         }
       ]

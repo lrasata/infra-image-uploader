@@ -117,6 +117,12 @@ resource "aws_api_gateway_deployment" "deployment" {
   ]
 }
 
+# Sets CloudWatch Logs role for the entire AWS account
+# API stage cannot apply logging until this account-level setting exists.
+resource "aws_api_gateway_account" "account" {
+  cloudwatch_role_arn = aws_iam_role.cloudwatch_role.arn
+}
+
 resource "aws_cloudwatch_log_group" "apigw_access_logs" {
   name              = "/aws/apigateway/${var.environment}-${var.app_id}-access-logs"
   retention_in_days = 30
@@ -127,6 +133,8 @@ resource "aws_api_gateway_stage" "api_gateway_stage" {
   rest_api_id          = aws_api_gateway_rest_api.api.id
   stage_name           = var.environment
   xray_tracing_enabled = true
+
+  depends_on = [aws_api_gateway_account.account]
 
   access_log_settings {
     destination_arn = aws_cloudwatch_log_group.apigw_access_logs.arn
@@ -194,10 +202,4 @@ resource "aws_iam_role" "cloudwatch_role" {
 resource "aws_iam_role_policy_attachment" "cloudwatch_attachment" {
   role       = aws_iam_role.cloudwatch_role.name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonAPIGatewayPushToCloudWatchLogs"
-}
-
-# Sets CloudWatch Logs role for the entire AWS account
-# API stage cannot apply logging until this account-level setting exists.
-resource "aws_api_gateway_account" "account" {
-  cloudwatch_role_arn = aws_iam_role.cloudwatch_role.arn
 }
