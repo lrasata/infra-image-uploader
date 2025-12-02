@@ -1,0 +1,70 @@
+name: Destroy staging
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Which environment to destroy?"
+        required: true
+        type: choice
+        options:
+          - staging
+
+jobs:
+  deploy:
+    name: Destroy ${{ github.event.inputs.environment }}
+    runs-on: ubuntu-latest
+    environment: ${{ github.event.inputs.environment }}
+
+    permissions:
+      id-token: write
+      contents: read
+
+    env:
+      ENVIRONMENT: ${{ github.event.inputs.environment }}
+      TF_WORKING_DIR: terraform/live/${{ github.event.inputs.environment }}
+      TF_VAR_region: ${{ secrets.AWS_REGION }}
+      TF_VAR_app_id: file-uploader
+      TF_VAR_environment: ${{ github.event.inputs.environment }}
+      TF_VAR_api_file_upload_domain_name: ${{ github.event.inputs.environment }}-api-file-upload.epic-trip-planner.com
+      TF_VAR_backend_certificate_arn: ${{ secrets.BACKEND_CERTIFICATE_ARN }}
+      TF_VAR_uploads_bucket_name: file-upload-bucket
+      TF_VAR_enable_transfer_acceleration: true
+      TF_VAR_secret_store_name: ${{ secrets.SECRET_STORE_NAME }}
+      TF_VAR_route53_zone_name: epic-trip-planner.com
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.6.0
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::387836084035:role/gitHubFileUploader
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Terraform Init
+        working-directory: ${{ env.TF_WORKING_DIR }}
+        run: terraform init -input=false
+
+      - name: Terraform Destroy
+        working-directory: ${{ env.TF_WORKING_DIR }}
+        run: |
+          terraform destroy -auto-approve
+
+      - name: Deployment destroy summary
+        run: |
+          echo "### Destroy Completed" >> $GITHUB_STEP_SUMMARY
+          echo "**Environment:** ${{ env.ENVIRONMENT }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Timestamp:** $(date)" >> $GITHUB_STEP_SUMMARY
+          echo "**Commit:** ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
