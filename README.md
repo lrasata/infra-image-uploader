@@ -41,9 +41,25 @@ module "file_uploader" {
   bucketav_sns_findings_topic_name              = var.bucketav_sns_findings_topic_name
 }
 ```
->
-> **Prerequisites** to successfully deploy this infrastructure, are described in the Prerequisites section of [DEVELOPMENT.md](DEVELOPMENT.md)
->
+
+## CI/CD (GitHub Actions)
+
+This repository includes GitHub Actions workflows to run Terraform plan on pull requests and automatically apply Terraform in controlled scenarios:
+
+- `terraform-plan-pr-to-staging.yml` - runs on pull request events. It performs `terraform init`, `terraform validate`, `terraform plan` (staging), uploads the plan as an artifact, and comments the output on the PR.
+- `terraform-apply-to-ephemeral-env.yml` - triggers a Terraform apply to ephemeral when a PR review is submitted with state `approved` and the pull request has the `auto-apply` label. It also supports `workflow_dispatch` for manual apply.
+
+Required GitHub Secrets for these workflows:
+
+- `AWS_REGION` — AWS region to use e.g. `eu-central-1`.
+- `BACKEND_CERTIFICATE_ARN` — backend certificate arn for the domain name
+- `SECRET_STORE_NAME` — Per env, define this secret store nameof Secret Manager
+
+Workflow details:
+
+- The plan workflow runs Terraform in `terraform/live/staging` and comments a plan snapshot on the PR.
+- The PR-approval apply workflow only applies if the PR is labeled `auto-apply` and a reviewer approves the PR. This workflow applies to `terraform/live/ephemeral` by default.
+- The push-to-main workflow applies the `terraform/live/staging` environment.
 
 ### Access object in S3 private uploads bucket
 
@@ -72,8 +88,6 @@ output "uploads_bucket_regional_domain_name" {
 Usage : 
 origin_bucket_arn = module.file_uploader.uploads_bucket_arn
 ````
-
-> FYI: Currently testing the integration of `file-uploader` within the infrascture of a full-stack web application: [trip-planner-web-app](https://github.com/lrasata/infra-trip-planner-webapp)
 
 ## Key attributes
 

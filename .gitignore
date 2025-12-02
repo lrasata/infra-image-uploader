@@ -28,7 +28,6 @@ override.tf.json
 # avoid accidental push
 .env
 dist
-modules/**/*.zip
-modules/file_uploader/lambda_process_uploaded_file/node_modules
-modules/file_uploader/lambda_get_presigned_url/node_modules
+terraform/modules/file_uploader/submodules/lambda_function/**/*.zip
+terraform/modules/file_uploader/src/**/node_modules
 test_scripts
