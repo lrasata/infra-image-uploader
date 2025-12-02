@@ -42,7 +42,7 @@ module "file_uploader" {
 }
 ```
 
-## CI/CD (GitHub Actions) ⚙️
+## CI/CD (GitHub Actions)
 
 This repository includes GitHub Actions workflows to run Terraform plan on pull requests and automatically apply Terraform in controlled scenarios:
 
@@ -88,8 +88,6 @@ output "uploads_bucket_regional_domain_name" {
 Usage : 
 origin_bucket_arn = module.file_uploader.uploads_bucket_arn
 ````
-
-> FYI: Currently testing the integration of `file-uploader` within the infrascture of a full-stack web application: [trip-planner-web-app](https://github.com/lrasata/infra-trip-planner-webapp)
 
 ## Key attributes
 
