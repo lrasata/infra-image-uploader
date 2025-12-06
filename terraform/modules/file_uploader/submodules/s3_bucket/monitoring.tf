@@ -61,9 +61,8 @@ resource "aws_s3_bucket_logging" "uploads_logging" {
 }
 
 # ============================================================================
-# Logging target bucket - Cloud trail
+# Logging target bucket - CloudTrail
 # ============================================================================
-
 resource "aws_s3_bucket" "cloudtrail_logs" {
   bucket = "${var.environment}-${var.app_id}-cloudtrail-logs"
 }
@@ -77,7 +76,7 @@ resource "aws_s3_bucket_public_access_block" "cloudtrail_logs_block" {
   restrict_public_buckets = true
 }
 
-resource "aws_s3_bucket_ownership_controls" "cloud_trail_target_ownership" {
+resource "aws_s3_bucket_ownership_controls" "cloudtrail_logs_ownership" {
   bucket = aws_s3_bucket.cloudtrail_logs.id
 
   rule {
@@ -85,7 +84,7 @@ resource "aws_s3_bucket_ownership_controls" "cloud_trail_target_ownership" {
   }
 }
 
-resource "aws_s3_bucket_versioning" "cloudtrail_target_versioning" {
+resource "aws_s3_bucket_versioning" "cloudtrail_logs_versioning" {
   bucket = aws_s3_bucket.cloudtrail_logs.id
 
   versioning_configuration {
@@ -93,6 +92,7 @@ resource "aws_s3_bucket_versioning" "cloudtrail_target_versioning" {
   }
 }
 
+# CloudTrail S3 Bucket Policy
 resource "aws_s3_bucket_policy" "cloudtrail_logs_policy" {
   bucket = aws_s3_bucket.cloudtrail_logs.id
 
@@ -103,37 +103,44 @@ resource "aws_s3_bucket_policy" "cloudtrail_logs_policy" {
         Sid       = "AWSCloudTrailWrite"
         Effect    = "Allow"
         Principal = { Service = "cloudtrail.amazonaws.com" }
-        Action    = "s3:PutObject"
+        Action    = ["s3:PutObject"]
         Resource  = "${aws_s3_bucket.cloudtrail_logs.arn}/AWSLogs/${data.aws_caller_identity.current.account_id}/*"
+        Condition = {
+          StringEquals = {
+            "s3:x-amz-acl" = "bucket-owner-full-control"
+          }
+        }
       },
       {
-        Sid       = "AllowCloudTrailToUseKMS",
-        Effect    = "Allow",
-        Principal = { Service = "cloudtrail.amazonaws.com" },
-        Action = [
+        Sid       = "AWSCloudTrailBucketAclCheck"
+        Effect    = "Allow"
+        Principal = { Service = "cloudtrail.amazonaws.com" }
+        Action    = ["s3:GetBucketAcl"]
+        Resource  = aws_s3_bucket.cloudtrail_logs.arn
+      },
+      {
+        Sid       = "AllowCloudTrailToUseKMS"
+        Effect    = "Allow"
+        Principal = { Service = "cloudtrail.amazonaws.com" }
+        Action    = [
           "kms:Encrypt",
           "kms:Decrypt",
           "kms:ReEncrypt*",
           "kms:GenerateDataKey*"
-        ],
+        ]
         Resource = aws_kms_key.cloudtrail_cmk.arn
-      },
-      {
-        Sid       = "AWSCloudTrailBucketAclCheck",
-        Effect    = "Allow",
-        Principal = { Service = "cloudtrail.amazonaws.com" },
-        Action    = "s3:GetBucketAcl",
-        Resource  = aws_s3_bucket.cloudtrail_logs.arn
       }
     ]
   })
 }
 
+# CloudWatch Log Group for CloudTrail
 resource "aws_cloudwatch_log_group" "s3_logs" {
   name              = "/aws/cloudtrail/${var.environment}-${var.app_id}-s3"
   retention_in_days = 30
 }
 
+# IAM Role for CloudTrail to CloudWatch
 resource "aws_iam_role" "cloudtrail_to_cw" {
   name = "${var.environment}-${var.app_id}-cloudtrail-to-cw"
 
@@ -164,6 +171,7 @@ resource "aws_iam_role_policy" "cloudtrail_to_cw_policy" {
   })
 }
 
+# CloudTrail Trail
 resource "aws_cloudtrail" "s3_data_trail" {
   name                          = "${var.environment}-${var.app_id}-s3-data-events"
   include_global_service_events = false
@@ -171,7 +179,6 @@ resource "aws_cloudtrail" "s3_data_trail" {
 
   event_selector {
     read_write_type = "WriteOnly"
-
     data_resource {
       type   = "AWS::S3::Object"
       values = ["${aws_s3_bucket.uploads.arn}/"]
@@ -182,8 +189,15 @@ resource "aws_cloudtrail" "s3_data_trail" {
   cloud_watch_logs_group_arn = aws_cloudwatch_log_group.s3_logs.arn
   cloud_watch_logs_role_arn  = aws_iam_role.cloudtrail_to_cw.arn
   kms_key_id                 = aws_kms_key.cloudtrail_cmk.arn
+
+  depends_on = [
+    aws_cloudwatch_log_group.s3_logs,
+    aws_iam_role_policy.cloudtrail_to_cw_policy,
+    aws_s3_bucket_policy.cloudtrail_logs_policy
+  ]
 }
 
+# CloudWatch Metric Filter for failed S3 uploads
 resource "aws_cloudwatch_log_metric_filter" "failed_s3_uploads" {
   name           = "FailedS3Uploads"
   log_group_name = aws_cloudwatch_log_group.s3_logs.name
@@ -197,6 +211,7 @@ resource "aws_cloudwatch_log_metric_filter" "failed_s3_uploads" {
   }
 }
 
+# CloudWatch Alarm
 resource "aws_cloudwatch_metric_alarm" "failed_uploads_alarm" {
   alarm_name          = "${var.environment}-${var.app_id}-failed-uploads"
   alarm_description   = "Triggers if more than 5 S3 uploads fail in 5 minutes."
