@@ -15,6 +15,7 @@ module "s3_bucket" {
   uploads_bucket_name          = var.uploads_bucket_name
   enable_transfer_acceleration = var.enable_transfer_acceleration
   sns_topic_alert_arn          = module.sns.sns_topic_alerts_arn
+  region = var.region
 }
 
 # Call the DynamoDB submodule
