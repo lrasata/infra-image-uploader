@@ -71,3 +71,8 @@ variable "lambda_memory_size_mb" {
   type        = number
   default     = 512
 }
+
+variable "notification_email" {
+  description = "Email address for notifications"
+  type        = string
+}

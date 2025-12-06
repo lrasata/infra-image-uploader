@@ -73,4 +73,18 @@ resource "aws_kms_key" "s3_cmk" {
   })
 }
 
-data "aws_caller_identity" "current" {}
+resource "aws_kms_alias" "s3_cmk_alias" {
+  name          = "alias/${var.environment}-${var.app_id}-s3-cmk"
+  target_key_id = aws_kms_key.s3_cmk.id
+}
+
+resource "aws_s3_bucket_server_side_encryption_configuration" "log_target_sse" {
+  bucket = aws_s3_bucket.log_target.id
+
+  rule {
+    apply_server_side_encryption_by_default {
+      sse_algorithm     = "aws:kms"
+      kms_master_key_id = aws_kms_key.s3_cmk.arn
+    }
+  }
+}

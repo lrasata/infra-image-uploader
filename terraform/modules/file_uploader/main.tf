@@ -1,3 +1,11 @@
+# Call of the sns submodule
+module "sns" {
+  source = "./submodules/sns"
+
+  environment        = var.environment
+  app_id             = var.app_id
+  notification_email = var.notification_email
+}
 # Call the S3 buckets submodule
 module "s3_bucket" {
   source = "./submodules/s3_bucket"
@@ -6,6 +14,7 @@ module "s3_bucket" {
   app_id                       = var.app_id
   uploads_bucket_name          = var.uploads_bucket_name
   enable_transfer_acceleration = var.enable_transfer_acceleration
+  sns_topic_alert_arn          = module.sns.sns_topic_alerts_arn
 }
 
 # Call the DynamoDB submodule
