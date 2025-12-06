@@ -154,14 +154,15 @@ resource "aws_iam_role" "cloudtrail_to_cw" {
 }
 
 resource "aws_iam_role_policy" "cloudtrail_to_cw_policy" {
+  name = "${var.environment}-${var.app_id}-cloudtrail-to-cw-policy"
   role = aws_iam_role.cloudtrail_to_cw.id
 
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
       {
-        Effect   = "Allow"
-        Action   = [
+        Effect = "Allow"
+        Action = [
           "logs:CreateLogStream",
           "logs:PutLogEvents",
           "logs:DescribeLogGroups"
@@ -177,6 +178,12 @@ resource "aws_cloudtrail" "s3_data_trail" {
   name                          = "${var.environment}-${var.app_id}-s3-data-events"
   include_global_service_events = false
   is_multi_region_trail         = false
+  s3_bucket_name                = aws_s3_bucket.cloudtrail_logs.bucket
+  cloud_watch_logs_group_arn    = aws_cloudwatch_log_group.s3_logs.arn
+  cloud_watch_logs_role_arn     = aws_iam_role.cloudtrail_to_cw.arn
+  kms_key_id                    = aws_kms_key.cloudtrail_cmk.arn
+  enable_log_file_validation    = true
+
 
   event_selector {
     read_write_type = "WriteOnly"
@@ -186,13 +193,9 @@ resource "aws_cloudtrail" "s3_data_trail" {
     }
   }
 
-  s3_bucket_name             = aws_s3_bucket.cloudtrail_logs.bucket
-  cloud_watch_logs_group_arn = aws_cloudwatch_log_group.s3_logs.arn
-  cloud_watch_logs_role_arn  = aws_iam_role.cloudtrail_to_cw.arn
-  kms_key_id                 = aws_kms_key.cloudtrail_cmk.arn
-
   depends_on = [
     aws_cloudwatch_log_group.s3_logs,
+    aws_iam_role.cloudtrail_to_cw,
     aws_iam_role_policy.cloudtrail_to_cw_policy,
     aws_s3_bucket_policy.cloudtrail_logs_policy
   ]
