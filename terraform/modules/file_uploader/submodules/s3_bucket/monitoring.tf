@@ -12,6 +12,10 @@ resource "aws_s3_bucket_ownership_controls" "log_target_ownership" {
   rule {
     object_ownership = "BucketOwnerEnforced"
   }
+
+  depends_on = [
+    aws_s3_bucket.cloudtrail_logs
+  ]
 }
 
 resource "aws_s3_bucket_versioning" "log_target_versioning" {
@@ -96,6 +100,7 @@ resource "aws_s3_bucket_versioning" "cloudtrail_logs_versioning" {
 resource "aws_s3_bucket_policy" "cloudtrail_logs_policy" {
   bucket = aws_s3_bucket.cloudtrail_logs.id
 
+
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
@@ -132,6 +137,11 @@ resource "aws_s3_bucket_policy" "cloudtrail_logs_policy" {
       }
     ]
   })
+
+  depends_on = [
+    aws_s3_bucket.cloudtrail_logs,
+    aws_kms_key.cloudtrail_cmk
+  ]
 }
 
 # CloudWatch Log Group for CloudTrail
