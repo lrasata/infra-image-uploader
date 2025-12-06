@@ -122,9 +122,3 @@ jobs:
               issue_number: prNumber,
               body: commentBody
             });
-
-      - name: Terraform Destroy
-        if: failure()
-        working-directory: ${{ env.TF_WORKING_DIR }}
-        run: |
-          terraform destroy -auto-approve
