@@ -160,6 +160,18 @@ resource "aws_iam_role_policy" "cloudtrail_to_cw_policy" {
   })
 }
 
+resource "null_resource" "wait_before_cloudtrail" {
+  depends_on = [
+    aws_cloudwatch_log_group.s3_logs,
+    aws_iam_role.cloudtrail_to_cw,
+    aws_iam_role_policy.cloudtrail_to_cw_policy
+  ]
+
+  provisioner "local-exec" {
+    command = "sleep 15"
+  }
+}
+
 # ============================================================================
 # CloudTrail Trail
 # ============================================================================
@@ -181,12 +193,7 @@ resource "aws_cloudtrail" "s3_data_trail" {
     }
   }
 
-  depends_on = [
-    aws_cloudwatch_log_group.s3_logs,
-    aws_iam_role.cloudtrail_to_cw,
-    aws_iam_role_policy.cloudtrail_to_cw_policy,
-    aws_s3_bucket_policy.cloudtrail_logs_policy
-  ]
+  depends_on = [null_resource.wait_before_cloudtrail]
 }
 
 # ============================================================================
