@@ -161,7 +161,11 @@ resource "aws_iam_role_policy" "cloudtrail_to_cw_policy" {
     Statement = [
       {
         Effect   = "Allow"
-        Action   = ["logs:CreateLogStream", "logs:PutLogEvents"]
+        Action   = [
+          "logs:CreateLogStream",
+          "logs:PutLogEvents",
+          "logs:DescribeLogGroups"
+        ]
         Resource = "${aws_cloudwatch_log_group.s3_logs.arn}:*"
       }
     ]
