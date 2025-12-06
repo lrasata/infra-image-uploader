@@ -100,7 +100,6 @@ resource "aws_s3_bucket_versioning" "cloudtrail_logs_versioning" {
 resource "aws_s3_bucket_policy" "cloudtrail_logs_policy" {
   bucket = aws_s3_bucket.cloudtrail_logs.id
 
-
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
@@ -122,25 +121,13 @@ resource "aws_s3_bucket_policy" "cloudtrail_logs_policy" {
         Principal = { Service = "cloudtrail.amazonaws.com" }
         Action    = ["s3:GetBucketAcl"]
         Resource  = aws_s3_bucket.cloudtrail_logs.arn
-      },
-      {
-        Sid       = "AllowCloudTrailToUseKMS"
-        Effect    = "Allow"
-        Principal = { Service = "cloudtrail.amazonaws.com" }
-        Action    = [
-          "kms:Encrypt",
-          "kms:Decrypt",
-          "kms:ReEncrypt*",
-          "kms:GenerateDataKey*"
-        ]
-        Resource = aws_kms_key.cloudtrail_cmk.arn
       }
     ]
   })
 
   depends_on = [
     aws_s3_bucket.cloudtrail_logs,
-    aws_kms_key.cloudtrail_cmk
+    aws_s3_bucket_ownership_controls.cloudtrail_logs_ownership
   ]
 }
 
