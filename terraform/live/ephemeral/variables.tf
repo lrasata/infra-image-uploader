@@ -72,3 +72,8 @@ variable "app_id" {
   type        = string
   default     = "file-uploader"
 }
+
+variable "notification_email" {
+  description = "Email address for notifications"
+  type        = string
+}

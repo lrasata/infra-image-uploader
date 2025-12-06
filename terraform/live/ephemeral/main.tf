@@ -14,4 +14,5 @@ module "file_uploader" {
   bucket_av_sns_findings_topic_name             = var.bucketav_sns_findings_topic_name
   lambda_memory_size_mb                         = var.lambda_memory_size_mb
   route53_zone_name                             = var.route53_zone_name
+  notification_email                            = var.notification_email
 }
