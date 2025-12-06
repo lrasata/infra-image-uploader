@@ -14,6 +14,19 @@ resource "aws_kms_key" "cloudtrail_cmk" {
         Resource  = "*"
       },
 
+      # Allow GitHub Actions role to manage the key
+      {
+        Sid    = "AllowGithubActions"
+        Effect = "Allow"
+        Principal = {
+          AWS = "arn:aws:iam::387836084035:role/gitHubFileUploader"
+        }
+        Action = [
+          "kms:*" # full key management actions including PutKeyPolicy
+        ]
+        Resource = "*"
+      },
+
       # Allow CloudTrail to encrypt logs
       {
         Sid       = "AllowCloudTrailService"
