@@ -160,18 +160,6 @@ resource "aws_iam_role_policy" "cloudtrail_to_cw_policy" {
   })
 }
 
-resource "null_resource" "wait_before_cloudtrail" {
-  depends_on = [
-    aws_cloudwatch_log_group.s3_logs,
-    aws_iam_role.cloudtrail_to_cw,
-    aws_iam_role_policy.cloudtrail_to_cw_policy
-  ]
-
-  provisioner "local-exec" {
-    command = "sleep 15"
-  }
-}
-
 # ============================================================================
 # CloudTrail Trail
 # ============================================================================
@@ -180,7 +168,6 @@ resource "aws_cloudtrail" "s3_data_trail" {
   include_global_service_events = false
   is_multi_region_trail         = false
   s3_bucket_name                = aws_s3_bucket.cloudtrail_logs.bucket
-  cloud_watch_logs_group_arn    = aws_cloudwatch_log_group.s3_logs.arn
   cloud_watch_logs_role_arn     = aws_iam_role.cloudtrail_to_cw.arn
   kms_key_id                    = aws_kms_key.cloudtrail_cmk.arn
   enable_log_file_validation    = true
@@ -192,8 +179,6 @@ resource "aws_cloudtrail" "s3_data_trail" {
       values = ["${aws_s3_bucket.uploads.arn}/"]
     }
   }
-
-  depends_on = [null_resource.wait_before_cloudtrail]
 }
 
 # ============================================================================
