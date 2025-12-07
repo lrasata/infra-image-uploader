@@ -1,3 +1,5 @@
+data "aws_caller_identity" "current" {}
+
 resource "aws_kms_key" "s3_cmk" {
   description         = "CMK for S3 uploads and access logs"
   enable_key_rotation = true

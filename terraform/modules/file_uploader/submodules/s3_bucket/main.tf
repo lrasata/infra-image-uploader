@@ -1,5 +1,3 @@
-data "aws_caller_identity" "current" {}
-
 # S3 bucket for uploads and thumbnails storage
 resource "aws_s3_bucket" "uploads" {
   bucket = "${var.environment}-${var.app_id}-${var.uploads_bucket_name}"
