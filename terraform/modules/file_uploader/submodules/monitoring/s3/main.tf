@@ -39,7 +39,7 @@ resource "aws_cloudwatch_metric_alarm" "s3_5xx_errors" {
   alarm_description   = "Frequent S3 5xx server-side errors."
   comparison_operator = "GreaterThanThreshold"
   evaluation_periods  = 1
-  threshold           = 5
+  threshold           = 1
   period              = 300
   metric_name         = "5xxErrors"
   namespace           = "AWS/S3"

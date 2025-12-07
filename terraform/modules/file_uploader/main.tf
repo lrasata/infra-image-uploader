@@ -68,6 +68,8 @@ module "api_gateway" {
   get_presigned_url_lambda_function_name = module.lambda_functions["get_presigned_url"].function_name
   get_presigned_url_lambda_arn           = module.lambda_functions["get_presigned_url"].function_arn
 
+  sns_topic_arn = module.sns.sns_topic_alerts_arn
+
   depends_on = [module.lambda_functions]
 }
 

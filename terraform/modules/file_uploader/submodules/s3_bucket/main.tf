@@ -80,5 +80,5 @@ module "monitor_uploads" {
   bucket_name   = aws_s3_bucket.uploads.bucket
   bucket_id     = aws_s3_bucket.uploads.id
   sns_topic_arn = var.sns_topic_alert_arn
-  region = var.region
+  region        = var.region
 }

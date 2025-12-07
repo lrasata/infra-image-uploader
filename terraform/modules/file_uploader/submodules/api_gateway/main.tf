@@ -203,3 +203,10 @@ resource "aws_iam_role_policy_attachment" "cloudwatch_attachment" {
   role       = aws_iam_role.cloudwatch_role.name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonAPIGatewayPushToCloudWatchLogs"
 }
+
+module "monitoring_api_gw" {
+  source        = "../monitoring/api_gateway"
+  api_name      = aws_api_gateway_rest_api.api.name
+  region        = var.region
+  sns_topic_arn = var.sns_topic_arn
+}

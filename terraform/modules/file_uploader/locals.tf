@@ -17,6 +17,7 @@ locals {
         REGION             = var.region
         EXPIRATION_TIME_S  = var.lambda_upload_presigned_url_expiration_time_s
         UPLOAD_BUCKET      = module.s3_bucket.uploads_bucket_id
+        API_NAME           = "get-presigned-url-api"
         API_GW_AUTH_SECRET = module.secrets.auth_secret
         UPLOAD_FOLDER      = local.upload_folder
         USE_S3_ACCEL       = var.enable_transfer_acceleration
