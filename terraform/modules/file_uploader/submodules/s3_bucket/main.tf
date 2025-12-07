@@ -1,4 +1,6 @@
-# S3 bucket for uploads and thumbnails storage
+# ============================================================================
+# UPLOADS BUCKET - S3 bucket for uploads and thumbnails storage
+# ============================================================================
 resource "aws_s3_bucket" "uploads" {
   bucket = "${var.environment}-${var.app_id}-${var.uploads_bucket_name}"
 
@@ -68,4 +70,15 @@ resource "aws_s3_bucket_accelerate_configuration" "uploads_acceleration" {
   status = "Enabled"
 
   depends_on = [aws_s3_bucket_public_access_block.uploads_public_access]
+}
+
+# ============================================================================
+# MONITORING
+# ============================================================================
+module "monitor_uploads" {
+  source        = "../monitoring/s3"
+  bucket_name   = aws_s3_bucket.uploads.bucket
+  bucket_id     = aws_s3_bucket.uploads.id
+  sns_topic_arn = var.sns_topic_alert_arn
+  region = var.region
 }
