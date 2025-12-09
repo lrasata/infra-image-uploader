@@ -22,10 +22,10 @@ module "s3_bucket" {
 module "dynamodb" {
   source = "./submodules/dynamodb"
 
-  environment = var.environment
-  app_id      = var.app_id
+  environment         = var.environment
+  app_id              = var.app_id
   sns_topic_alert_arn = module.sns.sns_topic_alerts_arn
-  region = var.region
+  region              = var.region
 }
 
 # Call the Secrets Manager submodule
@@ -105,4 +105,13 @@ module "file_scanning" {
   upload_folder                              = local.upload_folder
   uploads_bucket_arn                         = module.s3_bucket.uploads_bucket_arn
   use_bucketav                               = var.use_bucket_av
+}
+
+# ============================================================================
+# MONITORING Lambda functions
+# ============================================================================
+module "monitor_thumbnail_generation_lambda" {
+  source      = "./submodules/monitoring/lambda_thumbnail_generator"
+  environment = var.environment
+  region      = var.region
 }

@@ -98,7 +98,10 @@ locals {
           Resource = ["*"],
           Condition = {
             StringEquals = {
-              "cloudwatch:Namespace" = "Custom/MetadataWriter"
+              "cloudwatch:Namespace" = [
+                "Custom/MetadataWriter",
+                "Custom/ThumbnailGenerator"
+              ]
             }
           }
         }

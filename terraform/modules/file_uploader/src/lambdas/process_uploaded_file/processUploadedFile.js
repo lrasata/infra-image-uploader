@@ -6,18 +6,22 @@ const sharp = require("sharp");
 const PARTITION_KEY = process.env.PARTITION_KEY || "id";
 const SORT_KEY = process.env.SORT_KEY || "file_key";
 const TABLE_NAME = process.env.DYNAMO_TABLE;
+const UPLOAD_FOLDER = process.env.UPLOAD_FOLDER || "";
+const THUMBNAIL_FOLDER = process.env.THUMBNAIL_FOLDER;
+const IS_BUCKETAV_ENABLED = process.env.BUCKET_AV_ENABLED || false;
 
-const NAMESPACE = "Custom/MetadataWriter";
+const NAMESPACE_METADATA_WRITER = "Custom/MetadataWriter";
+const NAMESPACE_THUMBNAIL = "Custom/ThumbnailGenerator";
 const cloudwatch = new AWS.CloudWatch();
 
 /**
  * CloudWatch Metric Helper
  */
-async function emitMetric(metricName, value, unit = "Count") {
+async function emitMetric(metricName, value, unit = "Count", namespace) {
     try {
         await cloudwatch
             .putMetricData({
-                Namespace: NAMESPACE,
+                Namespace: namespace,
                 MetricData: [
                     {
                         MetricName: metricName,
@@ -39,12 +43,10 @@ exports.handler = async (event) => {
     try {
         console.log("Incoming event:", JSON.stringify(event, null, 2));
 
-        const isBucketAVEnabled = process.env.BUCKET_AV_ENABLED || false;
-
         let bucket = "";
         let fileKey = "";
 
-        if (isBucketAVEnabled === "true") {
+        if (IS_BUCKETAV_ENABLED === "true") {
             // BucketAV SNS message
             const snsMessage = event.Records[0].Sns.Message;
             const message = JSON.parse(snsMessage);
@@ -52,7 +54,7 @@ exports.handler = async (event) => {
             bucket = message.bucket;
             fileKey = message.key;
 
-            const uploadFolder = (process.env.UPLOAD_FOLDER || "").trim().toLowerCase();
+            const uploadFolder = UPLOAD_FOLDER.trim().toLowerCase();
             const keyLower = fileKey.toLowerCase();
 
             if (!keyLower.startsWith(uploadFolder)) {
@@ -86,27 +88,49 @@ exports.handler = async (event) => {
         let thumbKey = null;
 
         if (ContentType && ContentType.startsWith("image/")) {
-            console.log(`Generating thumbnail for: ${fileKey}`);
+            console.log(`Image File detected: ${ContentType}. Generating thumbnail.`);
 
-            const thumbnailBuffer = await sharp(Body)
-                .resize(200, 200)
-                .toBuffer();
+            await emitMetric("ThumbnailRequested", 1, "Count", NAMESPACE_THUMBNAIL);
 
-            thumbKey = `${process.env.THUMBNAIL_FOLDER}${apiResource}/${partitionKey}/${filename}`;
+            const start = Date.now();
+            try {
+                // Generate thumbnail
+                const thumbnailBuffer = await sharp(Body)
+                    .resize(200, 200)
+                    .toBuffer();
 
-            await S3.putObject({
-                Bucket: bucket,
-                Key: thumbKey,
-                Body: thumbnailBuffer,
-                ContentType: ContentType,
-            }).promise();
+                // Upload back to S3
+                thumbKey = `${THUMBNAIL_FOLDER}${apiResource}/${partitionKey}/${filename}`;
+
+                await S3.putObject({
+                    Bucket: bucket,
+                    Key: thumbKey,
+                    Body: thumbnailBuffer,
+                    ContentType: ContentType
+                }).promise();
+
+                // Success metrics
+                await emitMetric("ThumbnailGenerated", 1, "Count", NAMESPACE_THUMBNAIL);
+                await emitMetric("ThumbnailDuration", Date.now() - start, "Milliseconds", NAMESPACE_THUMBNAIL);
+
+            } catch (err) {
+                console.error("❌ Thumbnail generation failed:", err);
+
+                // Error metrics
+                await emitMetric("ThumbnailFailed", 1, "Count", NAMESPACE_THUMBNAIL);
+                await emitMetric("ThumbnailLambdaErrors", 1, "Count", NAMESPACE_THUMBNAIL);
+            }
+
+        } else {
+            console.log("Not an image — skipping thumbnail generation.");
         }
+
 
         // ------------ DynamoDB metadata write ------------
         const dynamoStart = Date.now();
 
         try {
-            // Fetch existing selected=true items for same partitionKey
+            // Fetch existing selected=true items
             const existing = await DynamoDB.query({
                 TableName: TABLE_NAME,
                 KeyConditionExpression: "#pk = :pk",
@@ -115,8 +139,7 @@ exports.handler = async (event) => {
                     "#pk": PARTITION_KEY
                 },
                 ExpressionAttributeValues: {
-                    ":pk": partitionKey,
-                    ":trueVal": true
+                    ":pk": partitionKey
                 }
             }).promise();
 
@@ -157,20 +180,20 @@ exports.handler = async (event) => {
                 TransactItems: transactItems,
             }).promise();
 
-            await emitMetric("DynamoWrites", 1);
+            await emitMetric("DynamoWrites", 1, NAMESPACE_METADATA_WRITER);
         } catch (err) {
             console.error("DynamoDB error:", err);
 
-            await emitMetric("DynamoWriteFailed", 1);
+            await emitMetric("DynamoWriteFailed", 1, NAMESPACE_METADATA_WRITER);
 
             // Optional: latency metric even on failure
-            await emitMetric("DynamoLatency", Date.now() - dynamoStart, "Milliseconds");
+            await emitMetric("DynamoLatency", Date.now() - dynamoStart, "Milliseconds", NAMESPACE_METADATA_WRITER);
 
             throw err;
         }
 
         // Dynamo latency metric (success path)
-        await emitMetric("DynamoLatency", Date.now() - dynamoStart, "Milliseconds");
+        await emitMetric("DynamoLatency", Date.now() - dynamoStart, "Milliseconds", NAMESPACE_METADATA_WRITER);
 
         return {
             statusCode: 200,
