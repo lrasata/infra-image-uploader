@@ -75,7 +75,7 @@ locals {
       iam_policy_statements = [
         {
           Effect   = "Allow",
-          Action   = ["dynamodb:Query", "dynamodb:PutItem", "dynamodb:UpdateItem"],
+          Action   = ["dynamodb:Query", "dynamodb:Scan", "dynamodb:PutItem", "dynamodb:UpdateItem"],
           Resource = [module.dynamodb.files_metadata_table_arn]
         },
         {

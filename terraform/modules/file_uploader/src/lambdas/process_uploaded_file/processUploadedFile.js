@@ -130,18 +130,20 @@ exports.handler = async (event) => {
         const dynamoStart = Date.now();
 
         try {
-            // Fetch existing selected=true items
-            const existing = await DynamoDB.query({
+            const existing = await DynamoDB.scan({
                 TableName: TABLE_NAME,
-                KeyConditionExpression: "#pk = :pk",
-                FilterExpression: "selected = :trueVal",
+                FilterExpression: "#res = :res AND #id = :id AND selected = :trueVal",
                 ExpressionAttributeNames: {
-                    "#pk": PARTITION_KEY
+                    "#res": "resource",
+                    "#id": "id",
                 },
                 ExpressionAttributeValues: {
-                    ":pk": partitionKey
-                }
+                    ":res": apiResource,
+                    ":id": partitionKey,
+                    ":trueVal": true,
+                },
             }).promise();
+
 
             const transactItems = [];
 
@@ -151,8 +153,8 @@ exports.handler = async (event) => {
                     Update: {
                         TableName: TABLE_NAME,
                         Key: {
-                            [PARTITION_KEY]: item[PARTITION_KEY],
-                            [SORT_KEY]: item[SORT_KEY],
+                            id: item.id,
+                            file_key: item.file_key,
                         },
                         UpdateExpression: "SET selected = :falseVal",
                         ExpressionAttributeValues: { ":falseVal": false },
@@ -162,10 +164,10 @@ exports.handler = async (event) => {
 
             // Insert new item with selected=true
             const newItem = {
-                [PARTITION_KEY]: partitionKey,
-                [SORT_KEY]: fileKey,
-                thumbnail_key: thumbKey,
+                id: partitionKey,
+                file_key: fileKey,
                 resource: apiResource,
+                thumbnail_key: thumbKey,
                 selected: true,
             };
 
@@ -180,11 +182,11 @@ exports.handler = async (event) => {
                 TransactItems: transactItems,
             }).promise();
 
-            await emitMetric("DynamoWrites", 1, NAMESPACE_METADATA_WRITER);
+            await emitMetric("DynamoWrites", 1, "Count", NAMESPACE_METADATA_WRITER);
         } catch (err) {
             console.error("DynamoDB error:", err);
 
-            await emitMetric("DynamoWriteFailed", 1, NAMESPACE_METADATA_WRITER);
+            await emitMetric("DynamoWriteFailed", 1, "Count", NAMESPACE_METADATA_WRITER);
 
             // Optional: latency metric even on failure
             await emitMetric("DynamoLatency", Date.now() - dynamoStart, "Milliseconds", NAMESPACE_METADATA_WRITER);
