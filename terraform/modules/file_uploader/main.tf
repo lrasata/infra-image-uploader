@@ -24,6 +24,8 @@ module "dynamodb" {
 
   environment = var.environment
   app_id      = var.app_id
+  sns_topic_alert_arn = module.sns.sns_topic_alerts_arn
+  region = var.region
 }
 
 # Call the Secrets Manager submodule

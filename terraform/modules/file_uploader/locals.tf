@@ -91,6 +91,16 @@ locals {
           Action   = ["kms:GenerateDataKey", "kms:Decrypt"]
           Effect   = "Allow"
           Resource = [module.s3_bucket.uploads_bucket_kms_key_arn]
+        },
+        {
+          Effect   = "Allow",
+          Action   = ["cloudwatch:PutMetricData"],
+          Resource = ["*"],
+          Condition = {
+            StringEquals = {
+              "cloudwatch:Namespace" = "Custom/MetadataWriter"
+            }
+          }
         }
       ]
     }

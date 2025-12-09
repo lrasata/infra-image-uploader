@@ -25,19 +25,23 @@ const corsHeaders = {
 
 const cloudwatch = new AWS.CloudWatch();
 async function emitMetric(metricName, value = 1) {
-    await cloudwatch.putMetricData({
-        Namespace: "Custom/API",
-        MetricData: [
-            {
-                MetricName: metricName,
-                Dimensions: [
-                    { Name: "ApiName", Value: API_NAME }
-                ],
-                Unit: "Count",
-                Value: value
-            }
-        ]
-    }).promise();
+    try {
+        await cloudwatch.putMetricData({
+            Namespace: "Custom/API",
+            MetricData: [
+                {
+                    MetricName: metricName,
+                    Dimensions: [
+                        { Name: "ApiName", Value: API_NAME }
+                    ],
+                    Unit: "Count",
+                    Value: value
+                }
+            ]
+        })
+    } catch (err) {
+        console.error(`❌ Failed to publish metric ${metricName}:`, err);
+    }
 }
 
 exports.handler = async (event) => {
