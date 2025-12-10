@@ -8,3 +8,13 @@ variable "app_id" {
   type        = string
   default     = ""
 }
+
+variable "sns_topic_alert_arn" {
+  type = string
+}
+
+variable "region" {
+  description = "The AWS region to deploy resources"
+  type        = string
+  default     = "eu-central-1"
+}

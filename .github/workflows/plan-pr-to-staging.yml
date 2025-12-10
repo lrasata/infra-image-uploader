@@ -14,7 +14,7 @@ jobs:
     environment: staging
 
     permissions:
-      id-token: write   # 🔥 OIDC
+      id-token: write   # OIDC
       contents: read
       pull-requests: write
 
@@ -28,8 +28,7 @@ jobs:
       TF_VAR_enable_transfer_acceleration: true
       TF_VAR_secret_store_name: ${{secrets.SECRET_STORE_NAME}}
       TF_VAR_route53_zone_name: epic-trip-planner.com
-      TF_VAR_common_tags: '{"Project":"file-uploader"}'
-
+      TF_VAR_notification_email: ${{secrets.ALERT_EMAIL}}
 
     steps:
       - name: Checkout repository

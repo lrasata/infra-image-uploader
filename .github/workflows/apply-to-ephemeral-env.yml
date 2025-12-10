@@ -34,6 +34,7 @@ jobs:
       TF_VAR_enable_transfer_acceleration: false
       TF_VAR_secret_store_name: ${{secrets.SECRET_STORE_NAME}}
       TF_VAR_route53_zone_name: epic-trip-planner.com
+      TF_VAR_notification_email: ${{secrets.ALERT_EMAIL}}
 
     steps:
       - name: Checkout repository
@@ -121,9 +122,3 @@ jobs:
               issue_number: prNumber,
               body: commentBody
             });
-
-      - name: Terraform Destroy
-        if: failure()
-        working-directory: ${{ env.TF_WORKING_DIR }}
-        run: |
-          terraform destroy -auto-approve

@@ -1,3 +1,6 @@
+variable "region" {
+  type = string
+}
 
 variable "environment" {
   description = "Environment name (dev, staging, prod)"
@@ -19,4 +22,8 @@ variable "app_id" {
   description = "Application identifier for tagging resources"
   type        = string
   default     = ""
+}
+
+variable "sns_topic_alert_arn" {
+  type = string
 }

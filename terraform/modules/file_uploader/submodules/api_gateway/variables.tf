@@ -34,3 +34,8 @@ variable "app_id" {
   type        = string
   default     = ""
 }
+
+variable "sns_topic_arn" {
+  description = "SNS topic for alarms."
+  type        = string
+}

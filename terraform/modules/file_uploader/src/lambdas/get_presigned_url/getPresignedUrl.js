@@ -6,6 +6,7 @@ const BUCKET_NAME = process.env.UPLOAD_BUCKET || "s3-bucket-name";
 const UPLOAD_FOLDER = process.env.UPLOAD_FOLDER || "uploads/";
 const EXPIRATION_TIME_S = parseInt(process.env.EXPIRATION_TIME_S || "300");
 const API_GW_AUTH_SECRET = process.env.API_GW_AUTH_SECRET;
+const API_NAME = process.env.API_NAME || "get-presigned-url-api";
 const PARTITION_KEY = process.env.PARTITION_KEY || "id";
 const SORT_KEY = process.env.SORT_KEY || "file_key";
 
@@ -22,7 +23,31 @@ const corsHeaders = {
     "Access-Control-Allow-Methods": "GET,OPTIONS,PUT",
 };
 
+const cloudwatch = new AWS.CloudWatch();
+async function emitMetric(metricName, value = 1) {
+    try {
+        await cloudwatch.putMetricData({
+            Namespace: "Custom/API",
+            MetricData: [
+                {
+                    MetricName: metricName,
+                    Dimensions: [
+                        { Name: "ApiName", Value: API_NAME }
+                    ],
+                    Unit: "Count",
+                    Value: value
+                }
+            ]
+        })
+    } catch (err) {
+        console.error(`❌ Failed to publish metric ${metricName}:`, err);
+    }
+}
+
 exports.handler = async (event) => {
+    // Client request a presigned url
+    await emitMetric("PresignURLRequests");
+
     const headers = event.headers || {};
     const customHeader = headers["x-api-gateway-file-upload-auth"];
 
@@ -36,7 +61,7 @@ exports.handler = async (event) => {
 
     const query = event.queryStringParameters || {};
 
-    // Client must send tripId, filename, extension, resource (name in plurals)
+    // Client must send id, filename, extension, resource (name in plurals)
     const partitionKey = query[PARTITION_KEY];
     const originalFilename = query[SORT_KEY];
     const extension = query.ext;
@@ -71,6 +96,9 @@ exports.handler = async (event) => {
             Expires: EXPIRATION_TIME_S
         });
 
+        // Pre-signed url was successfully generated
+        await emitMetric("PresignURLSuccess");
+
         return {
             statusCode: 200,
             headers: corsHeaders,
@@ -81,6 +109,9 @@ exports.handler = async (event) => {
         };
 
     } catch (error) {
+        // presigned URL generation failed
+        await emitMetric("PresignURLFailed");
+
         return {
             statusCode: 500,
             headers: corsHeaders,

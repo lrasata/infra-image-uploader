@@ -1,3 +1,11 @@
+# Call of the sns submodule
+module "sns" {
+  source = "./submodules/sns"
+
+  environment        = var.environment
+  app_id             = var.app_id
+  notification_email = var.notification_email
+}
 # Call the S3 buckets submodule
 module "s3_bucket" {
   source = "./submodules/s3_bucket"
@@ -6,14 +14,18 @@ module "s3_bucket" {
   app_id                       = var.app_id
   uploads_bucket_name          = var.uploads_bucket_name
   enable_transfer_acceleration = var.enable_transfer_acceleration
+  sns_topic_alert_arn          = module.sns.sns_topic_alerts_arn
+  region                       = var.region
 }
 
 # Call the DynamoDB submodule
 module "dynamodb" {
   source = "./submodules/dynamodb"
 
-  environment = var.environment
-  app_id      = var.app_id
+  environment         = var.environment
+  app_id              = var.app_id
+  sns_topic_alert_arn = module.sns.sns_topic_alerts_arn
+  region              = var.region
 }
 
 # Call the Secrets Manager submodule
@@ -58,6 +70,8 @@ module "api_gateway" {
   get_presigned_url_lambda_function_name = module.lambda_functions["get_presigned_url"].function_name
   get_presigned_url_lambda_arn           = module.lambda_functions["get_presigned_url"].function_arn
 
+  sns_topic_arn = module.sns.sns_topic_alerts_arn
+
   depends_on = [module.lambda_functions]
 }
 
@@ -91,4 +105,13 @@ module "file_scanning" {
   upload_folder                              = local.upload_folder
   uploads_bucket_arn                         = module.s3_bucket.uploads_bucket_arn
   use_bucketav                               = var.use_bucket_av
+}
+
+# ============================================================================
+# MONITORING Lambda functions
+# ============================================================================
+module "monitor_thumbnail_generation_lambda" {
+  source      = "./submodules/monitoring/lambda_thumbnail_generator"
+  environment = var.environment
+  region      = var.region
 }
