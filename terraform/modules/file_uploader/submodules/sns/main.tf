@@ -1,6 +1,9 @@
 resource "aws_sns_topic" "alerts" {
   name = "${var.environment}-${var.app_id}-${var.service_name}-sns-topic"
 
+  # SNS encryption with AWS managed key
+  kms_master_key_id = "alias/aws/sns"
+
   tags = {
     Service     = var.service_name
     Environment = var.environment
