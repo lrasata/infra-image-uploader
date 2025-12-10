@@ -1,5 +1,12 @@
+resource "aws_kms_key" "sns_cmk" {
+  description         = "SNS CMK"
+  enable_key_rotation = true
+}
+
 resource "aws_sns_topic" "alerts" {
   name = "${var.environment}-${var.app_id}-${var.service_name}-sns-topic"
+
+  kms_master_key_id = aws_kms_key.sns_cmk.arn
 
   tags = {
     Service     = var.service_name
