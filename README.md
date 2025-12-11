@@ -1,23 +1,31 @@
-# File uploader infrastructure - managed with Terraform on AWS
+# File Uploader Infrastructure - Managed with Terraform on AWS
+**🟢 Pipeline Status**
+
+![Staging Plan](https://github.com/lrasata/infra-file-uploader/actions/workflows/plan-pr-to-staging.yml/badge.svg)
+
+![Staging Apply](https://github.com/lrasata/infra-file-uploader/actions/workflows/apply-to-staging-or-prod.yml/badge.svg)
+
+![Ephemeral Apply](https://github.com/lrasata/infra-file-uploader/actions/workflows/apply-to-ephemeral-env.yml/badge.svg)
 
 ## Overview
 
 This project provides a **Terraform module** that allows clients to upload files securely to AWS.
-It supports **optional malware scanning via BucketAV**, thumbnail generation, and user metadata storage in DynamoDB.
-This infrastrcture is a **100% serveless**.
+It supports **optional malware scanning via BucketAV**, thumbnail generation for image files, and user metadata storage
+in DynamoDB.
+This infrastructure is **100% serverless**.
 
 **Flow overview:**
 
-1. Client requests a presigned URL from an API exposed via **API Gateway**.
+1. Client requests a presigned URL from an API endpoint exposed via **API Gateway**.
 2. Client **uploads the file directly to S3** using the presigned URL.
 3. If **BucketAV** is enabled:
-   - The upload triggers a scan.
-   - BucketAV publishes results to an SNS topic.
-   - Lambda subscribed to the topic generates thumbnails and saves metadata in DynamoDB.
+    - The upload triggers a scan.
+    - BucketAV publishes results to an SNS topic.
+    - Lambda subscribed to the topic generates thumbnails and saves metadata in DynamoDB.
 4. If BucketAV is **disabled**:
-   - Lambda is triggered directly by the **S3 object creation notification**.
-5. Thumbnail is stored in a dedicated S3 folder `thumbnails/`, and metadata (file key, thumbnail key, user ID, etc.) is recorded in **DynamoDB**.
-
+    - Lambda is triggered directly by the **S3 object creation notification**.
+5. In case of image file, a generated thumbnail is stored in a dedicated S3 folder `thumbnails/`, and metadata (file
+   key, thumbnail key, user ID, etc.) is recorded in **DynamoDB**.
 
 <img src="docs/upload-file-infra.png" alt="file-uploader-infrastructure">
 
@@ -42,48 +50,43 @@ module "file_uploader" {
 }
 ```
 
-## CI/CD (GitHub Actions)
-
-This repository includes GitHub Actions workflows to run Terraform plan on pull requests and automatically apply Terraform in controlled scenarios:
-
-- `terraform-plan-pr-to-staging.yml` - runs on pull request events. It performs `terraform init`, `terraform validate`, `terraform plan` (staging), uploads the plan as an artifact, and comments the output on the PR.
-- `terraform-apply-to-ephemeral-env.yml` - triggers a Terraform apply to ephemeral when a PR review is submitted with state `approved` and the pull request has the `auto-apply` label. It also supports `workflow_dispatch` for manual apply.
-
-Required GitHub Secrets for these workflows:
-
-- `AWS_REGION` — AWS region to use e.g. `eu-central-1`.
-- `BACKEND_CERTIFICATE_ARN` — backend certificate arn for the domain name
-- `SECRET_STORE_NAME` — Per env, define this secret store nameof Secret Manager
-
-Workflow details:
-
-- The plan workflow runs Terraform in `terraform/live/staging` and comments a plan snapshot on the PR.
-- The PR-approval apply workflow only applies if the PR is labeled `auto-apply` and a reviewer approves the PR. This workflow applies to `terraform/live/ephemeral` by default.
-- The push-to-main workflow applies the `terraform/live/staging` environment.
-
 ### Access object in S3 private uploads bucket
 
-This section only describes a suggestion/recommendation. But how you decide to access S3 private uploads bucket depends on your project requirements.
+This section only describes a suggestion or recommendation. But how you decide to access S3 private uploads bucket
+depends on your project requirements.
 
-One way to securely serve files from a private S3 bucket is through **CloudFront distribution with Origin Access Control (OAC) + bucket policy**. This way, the bucket stays **private**, and only **CloudFront** can access it. End-users get **signed URLs** or **signed cookies** to access objects within the private S§ bucket.
+One way to securely serve files from a private S3 bucket is through **CloudFront distribution with Origin Access
+Control (OAC) + bucket policy**. This way, the bucket stays **private**, and only **CloudFront** can access it.
+End-users get **signed URLs** or **signed cookies** to access objects within the private S§ bucket.
 
 The following outputs are provided by the module to allow a set up with Cloudfront distribution.
 
 ````text
+output "api_gateway_invoke_url" {
+  description = "Public URL for invoking the API Gateway"
+  value       = "https://${var.api_file_upload_domain_name}/upload-url"
+}
+
 output "uploads_bucket_id" {
   description = "The S3 uploads bucket ID (name)"
-  value       = aws_s3_bucket.s3_bucket_uploads.id
+  value       = module.s3_bucket.uploads_bucket_id
 }
 
 output "uploads_bucket_arn" {
   description = "The ARN of the S3 uploads bucket"
-  value       = aws_s3_bucket.s3_bucket_uploads.arn
+  value       = module.s3_bucket.uploads_bucket_arn
 }
 
 output "uploads_bucket_regional_domain_name" {
   description = "The regional domain name of the S3 bucket (for CloudFront origin)"
-  value       = aws_s3_bucket.s3_bucket_uploads.bucket_regional_domain_name
+  value       = module.s3_bucket.uploads_bucket_regional_domain_name
 }
+
+output "dynamo_db_table_name" {
+  description = "The name of the DynamoDB table"
+  value       = module.dynamodb.files_metadata_table_name
+}
+
 
 Usage : 
 origin_bucket_arn = module.file_uploader.uploads_bucket_arn
@@ -94,18 +97,21 @@ origin_bucket_arn = module.file_uploader.uploads_bucket_arn
 ### Security
 
 - Optional **BucketAV integration** to scan for malware before files are processed.
-  - BucketAV scan is triggered after each upload and by default it deletes any infected file. (This behaviour can be changed in BucketAV settings)
+    - BucketAV scan is triggered after each upload and by default it deletes any infected file. (This behaviour can be
+      changed in BucketAV settings)
 - All files are stored in **S3 with default encryption SSE-S3**  at rest.
 - **Public access blocked** on the S3 uploads bucket to prevent unauthorized access.
-- **WAF** is attached to API Gateway to filter out bad traffic (bots, throttling, sql injection, etc.). It also blocks any unauthorised requests which do not contain required auth header.
+- **WAF** is attached to API Gateway to filter out bad traffic (bots, throttling, sql injection, etc.). It also blocks
+  any unauthorised requests which do not contain required auth header.
 
 ### Reliability
 
 - Lambda ensures **automatic scaling and high availability**.
 - S3 provides effective unlimited storage.
-  - Maximum object size: 5 TB per object.
-  - Maximum number of objects per bucket: unlimited.
-- SNS delivery ensures Lambda processing occurs only after BucketAV scan completes. **Lambda only process files which are tagged "clean" by BucketAV.**
+    - Maximum object size: 5 TB per object.
+    - Maximum number of objects per bucket: unlimited.
+- SNS delivery ensures Lambda processing occurs only after BucketAV scan completes. **Lambda only process files which
+  are tagged "clean" by BucketAV.**
 
 ### Scalability
 
@@ -114,35 +120,109 @@ origin_bucket_arn = module.file_uploader.uploads_bucket_arn
 
 ### Maintainability
 
-- **This Terraform project is built as a module**, it makes it easy to reuse across projects and environments.
+- **This Terraform project is built as a module**, it makes it easy to re-use across projects and environments.
 - **Environment-specific variables** allow dev/staging/prod separation.
 - Lambda functions are decoupled from S3 and SNS triggers, making updates safe and predictable.
+
+## Monitoring
+
+### S3 Uploads bucket
+
+Critical Alerts (CloudWatch → SNS → Email) triggered when Failed uploads > 5
+
+- 4xxErrors
+- 5xxErrors
+
+CloudWatch metrics 4xxErrors and 5xxErrors capture any request that reaches S3 but fails.
+
+- Captured Client Errors (4xx)
+- AccessDenied (bad IAM permissions)
+- InvalidAccessKeyId
+- SignatureDoesNotMatch
+- Upload to wrong bucket or prefix
+- Missing ACL permissions
+- Multipart upload part rejected
+- Incorrect use of presigned URLs
+- Captured Server Errors (5xx)
+- Internal S3 errors (rare)
+- Throttling
+- Transient S3 failures
+
+**Additional S3 Metrics on Dashboard**
+
+| Metric                      | Description                                 |
+|-----------------------------|---------------------------------------------|
+| **BucketSizeBytes**         | Total storage used                          |
+| **NumberOfObjects**         | Number of files stored                      |
+| **S3ObjectCreated**         | Number of uploads per time window           |
+| **S3EventNotificationSent** | Should match number of *successful* uploads |
+
+This validates that uploads → events → Lambda chain is functioning correctly.
+
+### API Gateway Metrics
+
+| Metric                          | Unit  | Description                            |
+|---------------------------------|-------|----------------------------------------|
+| **PresignURLRequests**          | Count | Total number of presigned URL requests |
+| **PresignURLSuccess**           | Count | Track healthy traffic levels           |
+| **PresignURLFailed**            | Count | Detect permission/config issues        |
+| **Latency**                     | ms    | Identify slow API behavior             |
+| **5XXError (Cloudwatch Alarm)** | Count | API internal server failures           |
+| **4XXError (Cloudwatch Alarm)** | Count | Authentication or malformed requests   |
+
+### DynamoDB Metadata writer
+
+| Metric                                                | Unit  | Why It Matters                        |
+|-------------------------------------------------------|-------|---------------------------------------|
+| **DynamoWrites**                                      | Count | Should match number of clean uploads  |
+| **DynamoWriteFailed (Cloudwatch Alarm)**              | Count | Permission or schema issues           |
+| **DynamoLatency**                                     | ms    | Detect DynamoDB slowness              |
+| **WriteThrottleEvents (Cloudwatch Alarm)**            | Count | Capacity problems → risk of data loss |
+| **ConditionalCheckFailedRequests (Cloudwatch Alarm)** | Count | Duplicate keys or constraint issues   |
+
+### Thumbnail Generation Lambda
+
+| Metric                        | Unit  | Description                                    |
+|-------------------------------|-------|------------------------------------------------|
+| **ThumbnailRequested**        | Count | Number of times thumbnail processing triggered |
+| **ThumbnailGenerated**        | Count | Successful thumbnail creation                  |
+| **ThumbnailFailed**           | Count | Sharp processing errors, corrupt files         |
+| **ThumbnailDuration**         | ms    | Performance tracking                           |
+| **ThumbnailLambdaErrors**     | Count | Lambda crashes or unhandled exceptions         |
 
 ## Infrastructure choices
 
 ### Why use DynamoDB instead of RDS
 
-Using S3 for file storage is a standard practice, but for metadata storage I chose DynamoDB over a relational database (RDS).
+Using S3 for file storage is a standard practice, but for metadata storage I chose DynamoDB over a relational database (
+RDS).
 
-- **Serverless alignment**: DynamoDB integrates naturally with the rest of the serverless stack (S3 + Lambda + API Gateway), ensuring consistent scalability and availability without managing servers.
-- **Scalability & performance**: DynamoDB scales automatically with unpredictable upload traffic, delivering single-digit millisecond latency for lookups.
-- **Fit for the use case**: The file uploader only requires simple, fast lookups (e.g., get file key or thumbnail URL by user). This doesn’t require complex relational queries, making DynamoDB the most efficient choice.
+- **Serverless alignment**: DynamoDB integrates naturally with the rest of the serverless stack (S3 + Lambda + API
+  Gateway), ensuring consistent scalability and availability without managing servers.
+- **Scalability & performance**: DynamoDB scales automatically with unpredictable upload traffic, delivering
+  single-digit millisecond latency for lookups.
+- **Fit for the use case**: The file uploader only requires simple, fast lookups (e.g., get file key or thumbnail URL by
+  user). This doesn’t require complex relational queries, making DynamoDB the most efficient choice.
 
 ### Why BucketAV (or other proprietary AV) instead of using ClamAV (open-source) in Lambda
 
-**TL;DR** For enterprise-grade, scalable, and low-maintenance infrastructure, a managed AV solution such as BucketAV is the pragmatic choice. While it reduces engineering overhead, it comes at [a cost](https://bucketav.com/pricing/) but it often proves cheaper in the long run when factoring in DevOps time, maintenance, and risk.
+**TL;DR** For enterprise-grade, scalable, and low-maintenance infrastructure, a managed AV solution such as BucketAV is
+the pragmatic choice. While it reduces engineering overhead, it comes at [a cost](https://bucketav.com/pricing/) but it
+often proves cheaper in the long run when factoring in DevOps time, maintenance, and risk.
 
 **Key considerations:**
 
-- **Operational simplicity:** BucketAV abstracts away the AV infrastructure and is delivered as a ready-to-use CloudFormation stack with configurable options.
-- **Maintenance burden:** Running ClamAV inside Lambda requires building and maintaining a Lambda Layer with ClamAV binaries and virus definitions. Building that layer (from experience) is painful and comes with challenges:
-  - Lambda layer size limit (250 MB uncompressed) can easily be exceeded by ClamAV signatures.
-  - Requires cross-compiling ClamAV for Amazon Linux 2.
-  - Virus definitions must be constantly updated, requiring rebuilds and redeployments.
-  
+- **Operational simplicity:** BucketAV abstracts away the AV infrastructure and is delivered as a ready-to-use
+  CloudFormation stack with configurable options.
+- **Maintenance burden:** Running ClamAV inside Lambda requires building and maintaining a Lambda Layer with ClamAV
+  binaries and virus definitions. Building that layer (from experience) is painful and comes with challenges:
+    - Lambda layer size limit (250 MB uncompressed) can easily be exceeded by ClamAV signatures.
+    - Requires cross-compiling ClamAV for Amazon Linux 2.
+    - Virus definitions must be constantly updated, requiring rebuilds and redeployments.
+
 With BucketAV (or equivalent managed AV), patching, signature updates, and scaling are handled by the vendor.
 
 - **Enterprise features:** Managed solutions like BucketAV provide features out of the box:
-  - Quarantine buckets for infected files
-  - Integration with SNS (used here to trigger downstream Lambda only after a file is marked “clean”)
-  - Logging, monitoring, and compliance reporting
+    - Quarantine buckets for infected files
+    - Integration with SNS (used here to trigger downstream Lambda only after a file is marked “clean”)
+    - Logging, monitoring, and compliance reporting

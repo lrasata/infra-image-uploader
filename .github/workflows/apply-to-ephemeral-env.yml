@@ -1,4 +1,4 @@
-name: Deploy to Ephemeral Environment
+name: Apply to Ephemeral Environment
 
 on:
   pull_request_review:

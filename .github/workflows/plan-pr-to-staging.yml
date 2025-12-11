@@ -1,4 +1,4 @@
-name: Terraform Plan on Pull Request on staging env
+name: Plan PR updates on Staging env
 
 on:
   pull_request:
